@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3rb.io Multibox Control | By Youcef</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at top, #222 0, #000 60%);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            height: 100%;
+            overflow: hidden;
+        }
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        p {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #ccc;
+            font-size: 14px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+            min-width: 140px;
+        }
+        button.secondary {
+            background: #64748b;
+        }
+        button:active {
+            transform: scale(0.96);
+            box-shadow: 0 0 0;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .hint {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .hotkeys {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h1>3rb.io Multibox | Control Panel</h1>
+        <p>Made for <b>Youcef</b> ❤️ — افتح أكثر من لاعب وتحكم فيهم من هنا.</p>
+
+        <div class="buttons">
+            <button id="open-1">فتح لاعب واحد (1 Player)</button>
+            <button id="open-3">فتح 3 لاعبين (3 Players)</button>
+            <button id="open-custom">فتح لاعب جديد (+1)</button>
+        </div>
+
+        <div class="buttons">
+            <button class="secondary" id="focus-1">التركيز على اللاعب 1 (Shortcut: 1)</button>
+            <button class="secondary" id="focus-2">التركيز على اللاعب 2 (Shortcut: 2)</button>
+            <button class="secondary" id="focus-3">التركيز على اللاعب 3 (Shortcut: 3)</button>
+        </div>
+
+        <div class="hotkeys">
+            ⌨ اختصارات الكيبورد: 1 / 2 / 3 لتبديل التركيز بين اللاعبين المفتوحين.
+        </div>
+        <div class="hint">
+            إذا ما تفتحش النوافذ، فعل السماح بالنوافذ المنبثقة (Popups) من المتصفح.
+        </div>
+    </div>
+</body>
+</html>
