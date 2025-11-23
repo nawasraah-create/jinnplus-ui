@@ -22,7 +22,6 @@
             position: relative;
         }
 
-        /* خلفية جميلة مع ضبابية */
         body::before {
             content: '';
             position: absolute;
@@ -37,7 +36,6 @@
             filter: blur(3px);
         }
 
-        /* حاوية Glassmorphism */
         .main-container {
             position: relative;
             z-index: 10;
@@ -101,6 +99,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             text-align: center;
             display: block;
+            text-decoration: none; /* مهم للروابط */
         }
 
         .btn-primary {
@@ -163,15 +162,14 @@
     
     <div class="game-section">
         <h2 class="section-title">🎮 اللعب والمزايا</h2>
-        ...
-<div class="btn-group">
-    
-    <a href="#" class="btn btn-primary" onclick="game.start(); return false;" style="text-decoration: none;">بدء اللعب</a>
-    
-    <a href="#" class="btn btn-primary" onclick="game.spectate(); return false;" style="text-decoration: none;">مشاهدة (Spectate)</a>
-    
-    </div>
-...
+        <div class="btn-group">
+            
+            <a href="#" class="btn btn-primary" onclick="game.start('FFA'); return false;">بدء اللعب</a>
+            
+            <a href="#" class="btn btn-primary" onclick="game.spectate(); return false;">مشاهدة (Spectate)</a>
+            
+            <button class="btn btn-secondary" onclick="alert('Opening Settings...')">الإعدادات</button>
+        </div>
         
         <div style="margin-top: 25px; padding: 10px; border: 1px dashed rgba(255, 195, 0, 0.4); border-radius: 8px;">
             <p>⭐ مزايا الـ Plus:</p>
@@ -186,8 +184,8 @@
         <h2 class="section-title">🌐 تواصل</h2>
         <div class="btn-group">
             
-            <a href="https://3rb.io/auth/discord" class="btn btn-primary" style="background-color: #7289DA; text-decoration: none;">تسجيل الدخول عبر Discord</a>
-            <a href="https://3rb.io/auth/google" class="btn btn-primary" style="background-color: #DB4437; text-decoration: none;">تسجيل الدخول عبر Google</a>
+            <a href="https://3rb.io/auth/discord" class="btn btn-primary" style="background-color: #7289DA;">تسجيل الدخول عبر Discord</a>
+            <a href="https://3rb.io/auth/google" class="btn btn-primary" style="background-color: #DB4437;">تسجيل الدخول عبر Google</a>
         </div>
         
         <div class="social-links">
@@ -196,5 +194,9 @@
             <span class="social-link" style="color: #1DA1F2;">Twitter</span>
         </div>
         
-        <p style="text-align: center; margin-top: 40px; font-size: 0.8rem; color: #999;">© 2024 J
+        <p style="text-align: center; margin-top: 40px; font-size: 0.8rem; color: #999;">© 2024 Jinn Clan</p>
+    </div>
+</div>
 
+</body>
+</html>
