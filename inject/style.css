@@ -1,6 +1,0 @@
-/* inject/style.css */
-#my3rbAddon { position: fixed; right: 12px; top: 12px; z-index: 2147483647; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; }
-#my3rbAddon .panel { background: linear-gradient(180deg, rgba(20,20,20,0.82), rgba(8,8,8,0.6)); color: #fff; padding: 12px; border-radius: 12px; min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-#my3rbAddon button { width: 100%; padding: 8px 10px; margin: 6px 0; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; background: rgba(255,255,255,0.04); color: #fff; transition: transform 0.12s ease; }
-#my3rbAddon button:hover { transform: translateY(-2px); }
-#my3rbAddon .small { font-size: 12px; opacity: 0.9; margin-top:6px; }
