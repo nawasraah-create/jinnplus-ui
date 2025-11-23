@@ -1,202 +1,465 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JINN PLUS - MODERN UI</title>
+    <title>JINN PLUS 2.0 - Play 3rb.io</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* [الستايلات كاملة للتصميم الجديد] */
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Cairo', sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #E0E0E0;
-            overflow: hidden;
-            background: linear-gradient(135deg, #1A1A2E, #0F0F1A);
-            position: relative;
+            box-sizing: border-box;
         }
 
-        body::before {
-            content: '';
-            position: absolute;
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* Canvas الخلفية */
+        #gameCanvas {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1542385108-c84119d27039');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.15;
-            filter: blur(3px);
+            z-index: 1;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0f 100%);
         }
 
-        .main-container {
-            position: relative;
+        /* واجهة المستخدم */
+        #ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 10;
-            background: rgba(15, 15, 25, 0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            padding: 40px;
-            width: 90%;
-            max-width: 900px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-
-        .header {
-            grid-column: 1 / -1;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 3.5rem;
-            color: #FFC300;
-            text-shadow: 0 0 10px #FFC300, 0 0 20px rgba(255, 195, 0, 0.5);
-            letter-spacing: 5px;
-            margin: 0;
-        }
-
-        .game-section, .social-section {
-            padding: 20px;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            color: #FFD700;
-            margin-bottom: 20px;
-            text-align: center;
-            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-            padding-bottom: 10px;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .btn {
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            display: block;
-            text-decoration: none; /* مهم للروابط */
-        }
-
-        .btn-primary {
-            background-color: #FFC300;
-            color: #1A1A2E;
-        }
-
-        .btn-primary:hover {
-            background-color: #FFD700;
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 6px 20px rgba(255, 195, 0, 0.4);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            color: #E0E0E0;
-            border: 2px solid #555;
-        }
-
-        .btn-secondary:hover {
-            border-color: #FFC300;
-            color: #FFC300;
-            background-color: rgba(255, 195, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .social-links {
             display: flex;
             justify-content: center;
-            gap: 25px;
-            margin-top: 30px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s ease;
         }
 
-        .social-link {
-            font-size: 2rem;
-            color: #E0E0E0;
-            transition: color 0.3s ease, transform 0.3s ease;
+        #ui-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .social-link:hover {
+        .ui-box {
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.95), rgba(15, 15, 26, 0.95));
+            border-radius: 25px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 195, 0, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 3.5rem;
             color: #FFC300;
-            transform: scale(1.15);
+            text-shadow: 0 0 30px rgba(255, 195, 0, 0.8);
+            font-weight: 900;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #FFD700;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 195, 0, 0.3);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 1.1rem;
+            font-family: 'Cairo', sans-serif;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #FFC300;
+            box-shadow: 0 0 20px rgba(255, 195, 0, 0.5);
+        }
+
+        .btn-play {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FFC300, #FFD700);
+            color: #1A1A2E;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+            margin-bottom: 15px;
+        }
+
+        .btn-play:hover {
+            background: linear-gradient(135deg, #FFD700, #FFED4E);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 195, 0, 0.6);
+        }
+
+        .server-info {
+            background: rgba(255, 195, 0, 0.1);
+            border: 1px solid rgba(255, 195, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .server-info p {
+            color: #FFD700;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* HUD - الواجهة أثناء اللعب */
+        #game-hud {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 195, 0, 0.3);
+            display: none;
+        }
+
+        #game-hud.active {
+            display: block;
+        }
+
+        #game-hud p {
+            margin: 5px 0;
+            color: #FFD700;
+            font-weight: 600;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 11;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: #FFD700;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .hint.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         @media (max-width: 768px) {
-            .main-container {
-                grid-template-columns: 1fr;
-                padding: 20px;
+            .logo h1 {
+                font-size: 2.5rem;
+            }
+            
+            .ui-box {
+                padding: 30px 20px;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="main-container">
-    <div class="header">
-        <h1>JINN PLUS 2.0</h1>
-        <p style="color: #FFD700;">الواجهة السلسة الجديدة</p>
+    <!-- Canvas اللعبة -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- واجهة البداية -->
+    <div id="ui-overlay">
+        <div class="ui-box">
+            <div class="logo">
+                <h1>JINN PLUS</h1>
+                <p>Play 3rb.io with Style</p>
+            </div>
+
+            <div class="input-group">
+                <label>اسم اللاعب</label>
+                <input type="text" id="playerName" placeholder="أدخل اسمك هنا..." maxlength="15">
+            </div>
+
+            <button class="btn-play" onclick="startGame()">
+                🚀 ابدأ اللعب
+            </button>
+
+            <div class="server-info">
+                <p>
+                    <span class="status-dot"></span>
+                    متصل بسيرفر 3rb.io
+                </p>
+                <p id="playerCount">اللاعبين: يتم التحميل...</p>
+            </div>
+        </div>
     </div>
-    
-    <div class="game-section">
-        <h2 class="section-title">🎮 اللعب والمزايا</h2>
-        <div class="btn-group">
-            
-            <a href="#" class="btn btn-primary" onclick="game.start('FFA'); return false;">بدء اللعب</a>
-            
-            <a href="#" class="btn btn-primary" onclick="game.spectate(); return false;">مشاهدة (Spectate)</a>
-            
-            <button class="btn btn-secondary" onclick="alert('Opening Settings...')">الإعدادات</button>
-        </div>
-        
-        <div style="margin-top: 25px; padding: 10px; border: 1px dashed rgba(255, 195, 0, 0.4); border-radius: 8px;">
-            <p>⭐ مزايا الـ Plus:</p>
-            <ul>
-                <li><small>سكنات حصرية</small></li>
-                <li><small>نقاط بداية مضاعفة</small></li>
-            </ul>
-        </div>
+
+    <!-- HUD أثناء اللعب -->
+    <div id="game-hud">
+        <p>اللاعب: <span id="hudName">-</span></p>
+        <p>النقاط: <span id="hudScore">0</span></p>
     </div>
-    
-    <div class="social-section">
-        <h2 class="section-title">🌐 تواصل</h2>
-        <div class="btn-group">
+
+    <!-- تلميحات -->
+    <div class="hint" id="hint">اضغط ESC للخروج</div>
+
+    <script>
+        // ============================================
+        // إعدادات الاتصال
+        // ============================================
+        
+        const CONFIG = {
+            gameServer: 'wss://3rb.io', // سيتم تحديثه تلقائياً من Tampermonkey
+            playerName: '',
+            isConnected: false
+        };
+
+        // ============================================
+        // Canvas Setup
+        // ============================================
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ============================================
+        // رسم خلفية متحركة
+        // ============================================
+        
+        let particles = [];
+        
+        function createParticles() {
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1
+                });
+            }
+        }
+
+        function drawBackground() {
+            ctx.fillStyle = 'rgba(10, 10, 15, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // رسم الشبكة
+            ctx.strokeStyle = 'rgba(255, 195, 0, 0.05)';
+            ctx.lineWidth = 1;
             
-            <a href="https://3rb.io/auth/discord" class="btn btn-primary" style="background-color: #7289DA;">تسجيل الدخول عبر Discord</a>
-            <a href="https://3rb.io/auth/google" class="btn btn-primary" style="background-color: #DB4437;">تسجيل الدخول عبر Google</a>
-        </div>
+            const gridSize = 50;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // رسم الجزيئات
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.fillStyle = 'rgba(255, 195, 0, 0.6)';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(drawBackground);
+        }
+
+        createParticles();
+        drawBackground();
+
+        // ============================================
+        // دالة بدء اللعب
+        // ============================================
         
-        <div class="social-links">
-            <span class="social-link" style="color: #7289DA;">Discord</span>
-            <span class="social-link" style="color: #E1306C;">Instagram</span>
-            <span class="social-link" style="color: #1DA1F2;">Twitter</span>
-        </div>
+        function startGame() {
+            const nameInput = document.getElementById('playerName');
+            const playerName = nameInput.value.trim();
+
+            if (!playerName) {
+                alert('الرجاء إدخال اسم اللاعب!');
+                nameInput.focus();
+                return;
+            }
+
+            // حفظ الاسم
+            CONFIG.playerName = playerName;
+            localStorage.setItem('jinnPlayerName', playerName);
+
+            // إخفاء الواجهة
+            document.getElementById('ui-overlay').classList.add('hidden');
+            document.getElementById('game-hud').classList.add('active');
+            document.getElementById('hudName').textContent = playerName;
+
+            // إظهار التلميح
+            const hint = document.getElementById('hint');
+            hint.classList.add('show');
+            setTimeout(() => hint.classList.remove('show'), 3000);
+
+            // إرسال حدث للـ Tampermonkey
+            window.dispatchEvent(new CustomEvent('jinnGameStart', {
+                detail: { playerName: playerName }
+            }));
+
+            console.log('🎮 Game started with name:', playerName);
+        }
+
+        // ============================================
+        // استقبال البيانات من Tampermonkey
+        // ============================================
         
-        <p style="text-align: center; margin-top: 40px; font-size: 0.8rem; color: #999;">© 2024 Jinn Clan</p>
-    </div>
-</div>
+        window.addEventListener('jinnGameData', (event) => {
+            const data = event.detail;
+            
+            // تحديث النقاط
+            if (data.score !== undefined) {
+                document.getElementById('hudScore').textContent = data.score;
+            }
+
+            // تحديث عدد اللاعبين
+            if (data.playerCount !== undefined) {
+                document.getElementById('playerCount').textContent = `اللاعبين: ${data.playerCount}`;
+            }
+
+            console.log('📊 Received game data:', data);
+        });
+
+        // ============================================
+        // ESC للعودة للقائمة
+        // ============================================
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('ui-overlay');
+                const hud = document.getElementById('game-hud');
+                
+                if (overlay.classList.contains('hidden')) {
+                    overlay.classList.remove('hidden');
+                    hud.classList.remove('active');
+                } else {
+                    overlay.classList.add('hidden');
+                    hud.classList.add('active');
+                }
+            }
+        });
+
+        // ============================================
+        // تحميل الاسم المحفوظ
+        // ============================================
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem('jinnPlayerName');
+            if (savedName) {
+                document.getElementById('playerName').value = savedName;
+            }
+
+            // محاكاة عدد اللاعبين
+            setInterval(() => {
+                const count = Math.floor(Math.random() * 50) + 100;
+                document.getElementById('playerCount').textContent = `اللاعبين: ${count}`;
+            }, 5000);
+        });
+
+        // Enter للعب
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                startGame();
+            }
+        });
+
+        console.log('✅ JINN PLUS Website Ready!');
+        console.log('💡 Install Tampermonkey script to connect to 3rb.io');
+    </script>
 
 </body>
 </html>
