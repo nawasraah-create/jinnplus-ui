@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JINN PLUS - MODERN UI</title>
     <style>
-        /* الخطوط والخلفية */
+        /* [الستايلات كاملة للتصميم الجديد] */
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
         
         body {
@@ -16,13 +16,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #E0E0E0; /* لون النص فاتح */
+            color: #E0E0E0;
             overflow: hidden;
-            background: linear-gradient(135deg, #1A1A2E, #0F0F1A); /* خلفية داكنة متدرجة */
+            background: linear-gradient(135deg, #1A1A2E, #0F0F1A);
             position: relative;
         }
 
-        /* تأثير الخلفية (إضافة جمالية) */
+        /* خلفية جميلة مع ضبابية */
         body::before {
             content: '';
             position: absolute;
@@ -30,19 +30,19 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1542385108-c84119d27039'); /* صورة خلفية ذات طابع تقني */
+            background-image: url('https://images.unsplash.com/photo-1542385108-c84119d27039');
             background-size: cover;
             background-position: center;
-            opacity: 0.15; /* شفافة جداً */
+            opacity: 0.15;
             filter: blur(3px);
         }
 
-        /* حاوية الواجهة الرئيسية (تأثير Glassmorphism) */
+        /* حاوية Glassmorphism */
         .main-container {
             position: relative;
             z-index: 10;
-            background: rgba(15, 15, 25, 0.85); /* خلفية شبه شفافة */
-            backdrop-filter: blur(10px); /* تأثير الضبابية */
+            background: rgba(15, 15, 25, 0.85);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             padding: 40px;
@@ -53,7 +53,6 @@
             gap: 40px;
         }
 
-        /* عنوان اللعبة */
         .header {
             grid-column: 1 / -1;
             text-align: center;
@@ -62,13 +61,12 @@
 
         .header h1 {
             font-size: 3.5rem;
-            color: #FFC300; /* لون ذهبي لامع */
+            color: #FFC300;
             text-shadow: 0 0 10px #FFC300, 0 0 20px rgba(255, 195, 0, 0.5);
             letter-spacing: 5px;
             margin: 0;
         }
 
-        /* قسم اللعب والخيارات */
         .game-section, .social-section {
             padding: 20px;
             border-radius: 15px;
@@ -85,13 +83,12 @@
             padding-bottom: 10px;
         }
 
-        /* الأزرار الرئيسية */
         .btn-group {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-
+        
         .btn {
             padding: 15px;
             border: none;
@@ -102,6 +99,8 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            display: block;
         }
 
         .btn-primary {
@@ -128,7 +127,6 @@
             transform: translateY(-2px);
         }
 
-        /* قسم السوشيال ميديا */
         .social-links {
             display: flex;
             justify-content: center;
@@ -147,7 +145,6 @@
             transform: scale(1.15);
         }
 
-        /* للمحمول */
         @media (max-width: 768px) {
             .main-container {
                 grid-template-columns: 1fr;
@@ -167,8 +164,11 @@
     <div class="game-section">
         <h2 class="section-title">🎮 اللعب والمزايا</h2>
         <div class="btn-group">
-            <button class="btn btn-primary" onclick="alert('Starting Game...')">بدء اللعب</button>
-            <button class="btn btn-primary" onclick="alert('Joining Spectate...')">مشاهدة (Spectate)</button>
+            
+            <a href="#" class="btn btn-primary" onclick="unsafeWindow.triggerGameAction('play'); return false;" style="text-decoration: none;">بدء اللعب</a>
+            
+            <a href="#" class="btn btn-primary" onclick="unsafeWindow.triggerGameAction('spectate'); return false;" style="text-decoration: none;">مشاهدة (Spectate)</a>
+            
             <button class="btn btn-secondary" onclick="alert('Opening Settings...')">الإعدادات</button>
         </div>
         
@@ -184,8 +184,9 @@
     <div class="social-section">
         <h2 class="section-title">🌐 تواصل</h2>
         <div class="btn-group">
-            <button class="btn btn-primary" style="background-color: #7289DA;">تسجيل الدخول عبر Discord</button>
-            <button class="btn btn-primary" style="background-color: #DB4437;">تسجيل الدخول عبر Google</button>
+            
+            <a href="https://3rb.io/auth/discord" class="btn btn-primary" style="background-color: #7289DA; text-decoration: none;">تسجيل الدخول عبر Discord</a>
+            <a href="https://3rb.io/auth/google" class="btn btn-primary" style="background-color: #DB4437; text-decoration: none;">تسجيل الدخول عبر Google</a>
         </div>
         
         <div class="social-links">
@@ -194,9 +195,4 @@
             <span class="social-link" style="color: #1DA1F2;">Twitter</span>
         </div>
         
-        <p style="text-align: center; margin-top: 40px; font-size: 0.8rem; color: #999;">© 2024 Jinn Clan</p>
-    </div>
-</div>
-
-</body>
-</html>
+        <p style="text-align: center; margin-top: 40px; font-size: 0.8rem; color: #999;">© 2024 J
