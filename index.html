@@ -1,24 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-  <title>Custom 3rb.io UI</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3rb.io Arabic Plus — HUD</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="ae-hud" dir="rtl" aria-live="polite">
+    <header>
+      <h2>🔥 3rb.io النسخة المحسّنة</h2>
+      <div id="ae-controls">
+        <button data-skin="none">السكن الافتراضي</button>
+        <button data-skin="skin1">سكن 1</button>
+        <button data-skin="skin2">سكن 2</button>
+        <select id="ae-map-theme">
+          <option value="default">خريطة: افتراضي</option>
+          <option value="night">ثيم ليلي</option>
+          <option value="colorful">خلفية ملونة</option>
+        </select>
+      </div>
+    </header>
 
-  <div id="ui-container">
+    <section id="ae-stats">
+      <div>FPS: <span id="ae-fps">--</span></div>
+      <div>Ping: <span id="ae-ping">N/A</span></div>
+    </section>
 
-      <h2>🔥 واجهة محمد المطوّرة 🔥</h2>
+    <section id="ae-effects">
+      <button id="ae-kill">شغل مؤثر Kill</button>
+      <button id="ae-win">شغل مؤثر Win</button>
+    </section>
 
-      <button id="playBtn">بدء اللعب</button>
-      <button id="splitBtn">Split</button>
-      <button id="feedBtn">Feed</button>
-
-      <h3>الحالة:</h3>
-      <pre id="log"></pre>
-
+    <footer>
+      <label><input type="checkbox" id="ae-overlay-toggle" checked> اظهار الـ HUD</label>
+      <small>تصميم عربي — للتخصيص فقط</small>
+    </footer>
   </div>
 
-  <script src="script.js"></script>
+  <!-- عناصر مساعدة (لن تظهر إلا عند الحاجة) -->
+  <div id="ae-overlay-layer" aria-hidden="true"></div>
+
+  <script src="main.js"></script>
 </body>
 </html>
