@@ -1,138 +1,106 @@
-/* main.js — AE: Arabic Enhancer (client-side cosmetic only)
-   ملاحظات أمان: لا يتفاعل مع سيرفر أو يغير وظائف اللعب، فقط واجهة وتصفية رسومية
-*/
-
+// main.js — AE UI logic (works in parent context)
 (function(){
-  // ===== عناصر HUD =====
+  // عناصر HUD
   const hud = document.getElementById('ae-hud');
-  const overlayLayer = document.getElementById('ae-overlay-layer');
   const fpsSpan = document.getElementById('ae-fps');
   const pingSpan = document.getElementById('ae-ping');
   const overlayToggle = document.getElementById('ae-overlay-toggle');
+  const skinOverlay = document.getElementById('ae-skin-overlay');
 
-  // ===== إضافة عنصر سكن يتبع مؤشر الفأرة (تجريبي بصري فقط) =====
-  const skinOverlay = document.createElement('img');
-  skinOverlay.id = 'ae-skin-overlay';
-  skinOverlay.src = chromeRuntimeSafe('assets/skin1.png'); // helper below will resolve correctly when hosted
-  skinOverlay.style.display = 'none';
-  overlayLayer.appendChild(skinOverlay);
+  // زرار السكنات
+  document.querySelectorAll('#ae-controls button[data-skin]').forEach(b => {
+    b.addEventListener('click', () => {
+      const skin = b.getAttribute('data-skin');
+      // نخبر الـ Launcher/iframe أننا نريد تطبيق سكن (اللعبة قد تختار الاستجابة أو لا)
+      window.postMessage({ aeOrigin:true, type:'AE_REQUEST_SKIN', payload:{ skin } }, '*');
+      // تطبيق بصري محلي (cosmetic) على الصفحة الأم — سيؤثر على canvas إن وُجد
+      document.documentElement.classList.remove('ae-skin-skin1','ae-skin-skin2');
+      if(skin === 'skin1') document.documentElement.classList.add('ae-skin-skin1');
+      if(skin === 'skin2') document.documentElement.classList.add('ae-skin-skin2');
+      // إظهار صورة تجريبية
+      if(skin !== 'none'){ skinOverlay.style.display='block'; skinOverlay.src='assets/'+skin+'.png'; } else { skinOverlay.style.display='none'; }
+    });
+  });
 
-  // ===== تبديل السكنات والثيمات =====
-  function removeSkinClasses() {
-    document.documentElement.classList.remove('ae-skin-skin1','ae-skin-skin2','ae-skin-none');
-  }
-  function setSkin(name) {
-    removeSkinClasses();
-    if(name && name !== 'none') {
-      document.documentElement.classList.add('ae-skin-' + name);
-      // show overlay icon for visual skin demo:
-      skinOverlay.src = chromeRuntimeSafe('assets/' + name + '.png');
-      skinOverlay.style.display = 'block';
-    } else {
-      skinOverlay.style.display = 'none';
-    }
-  }
-
-  // ثيمات الخريطة
-  function setMapTheme(theme) {
+  // ثيم الخريطة
+  document.getElementById('ae-map-theme').addEventListener('change', function(){
+    const t = this.value;
     document.documentElement.classList.remove('ae-theme-night','ae-theme-colorful');
-    if(theme === 'night') document.documentElement.classList.add('ae-theme-night');
-    if(theme === 'colorful') document.documentElement.classList.add('ae-theme-colorful');
-  }
-
-  // ===== أحداث الأزرار =====
-  document.querySelectorAll('#ae-controls button[data-skin]').forEach(btn => {
-    btn.addEventListener('click', ()=> setSkin(btn.getAttribute('data-skin')));
+    if(t==='night') document.documentElement.classList.add('ae-theme-night');
+    if(t==='colorful') document.documentElement.classList.add('ae-theme-colorful');
+    window.postMessage({ aeOrigin:true, type:'AE_REQUEST_THEME', payload:{ theme:t } }, '*');
   });
-  document.getElementById('ae-map-theme').addEventListener('change', e => setMapTheme(e.target.value));
 
-  document.getElementById('ae-kill').addEventListener('click', triggerKillEffect);
-  document.getElementById('ae-win').addEventListener('click', triggerWinEffect);
+  document.getElementById('ae-kill').addEventListener('click', ()=> {
+    window.postMessage({ aeOrigin:true, type:'AE_TRIGGER_EFFECT', payload:{ effect:'kill' } }, '*');
+    // effect UI local flash
+    document.body.style.transition='background 0.2s'; document.body.style.background='rgba(255,0,0,0.08)';
+    setTimeout(()=> document.body.style.background='', 400);
+  });
+  document.getElementById('ae-win').addEventListener('click', ()=> {
+    window.postMessage({ aeOrigin:true, type:'AE_TRIGGER_EFFECT', payload:{ effect:'win' } }, '*');
+  });
 
-  overlayToggle.addEventListener('change', (e)=>{
+  // HUD toggle
+  overlayToggle.addEventListener('change', e => {
     hud.style.display = e.target.checked ? 'block' : 'none';
+    // أيضًا نعلِم اللعبة إن أردنا
+    window.postMessage({ aeOrigin:true, type:'AE_UI_TOGGLE', payload:{ visible: e.target.checked } }, '*');
   });
 
-  // ===== FPS counter =====
-  let frames = 0, last = performance.now(), fps = 0;
-  function fpsTick(now) {
+  // FPS counter (محلي) باستخدام requestAnimationFrame
+  let frames = 0, last = performance.now();
+  function tick(now){
     frames++;
-    if(now - last >= 1000) {
-      fps = frames;
-      frames = 0;
-      last = now;
-      fpsSpan.textContent = fps;
-    }
-    requestAnimationFrame(fpsTick);
+    if(now - last >= 1000){ fpsSpan.textContent = frames; frames = 0; last = now; }
+    requestAnimationFrame(tick);
   }
-  requestAnimationFrame(fpsTick);
+  requestAnimationFrame(tick);
 
-  // ===== Ping (توضيحي) =====
-  // ملاحظة: قياس الـ Ping الحقيقي لـ 3rb.io يتطلب الوصول إلى WebSocket الخاص باللعبة أو دعم من السيرفر.
-  // هنا نبيّن N/A ونعطي واجهة لتوفير قياس إذا كان المستخدم أو مطور آخر يعرف كيفية قياس RTT داخل لعبة معينة.
+  // Ping سيظهر عندما يصل رد من اللعبة (اللعبة أو صاحبها يمكن أن يرسل رسالة 'AE_PING_REPLY')
   pingSpan.textContent = 'N/A';
 
-  // ===== مؤثرات Kill/Win (بصرية + صوتية) =====
-  function triggerKillEffect() {
-    // flash overlay briefly
-    overlayLayer.classList.add('ae-effect-kill');
-    setTimeout(()=> overlayLayer.classList.remove('ae-effect-kill'), 800);
-    // صوت إن وُجد
-    playAsset('assets/win-sound.mp3', 0.5);
-  }
-  function triggerWinEffect() {
-    document.documentElement.classList.add('ae-effect-win');
-    setTimeout(()=> document.documentElement.classList.remove('ae-effect-win'), 1500);
-    playAsset('assets/win-sound.mp3', 0.9);
-  }
+  // استقبال رسائل من iframe/Launcher
+  window.addEventListener('message', (ev) => {
+    const msg = ev.data;
+    if(!msg || typeof msg !== 'object' || !msg.aeOrigin) return;
 
-  function playAsset(src, vol=1) {
-    try {
-      const a = new Audio(chromeRuntimeSafe(src));
-      a.volume = vol;
-      a.play().catch(()=>{ /* تحاشي أخطاء التشغيل التلقائي */ });
-    } catch(e){ console.warn('playAsset failed', e); }
-  }
-
-  // ===== تتبع مؤشر الفأرة لتحريك سكن الـ overlay =====
-  window.addEventListener('mousemove', (ev)=>{
-    skinOverlay.style.left = ev.clientX + 'px';
-    skinOverlay.style.top = ev.clientY + 'px';
+    switch(msg.type){
+      case 'AE_PING_REPLY':
+        pingSpan.textContent = `${msg.payload.lat} ms`;
+        break;
+      case 'AE_EVENT':
+        // أمثلة: kill, win, scoreUpdate
+        handleGameEvent(msg.payload);
+        break;
+      default:
+        console.debug('AE UI got message', msg);
+    }
   });
 
-  // ===== أدوات للمطور: واجهة لتفعيل مؤثر عند كشف حدث حقيقي من اللعبة =====
-  window.AE = window.AE || {};
-  window.AE.triggerKillEffect = triggerKillEffect;
-  window.AE.triggerWinEffect = triggerWinEffect;
-  window.AE.setSkin = setSkin;
-  window.AE.setMapTheme = setMapTheme;
-
-  // ===== مساعدة: تحويل مسار النسخة الخام (raw) إلى مسار صحيح عند التشغيل من GitHub =====
-  function chromeRuntimeSafe(path) {
-    // عند وضع المشروع على GitHub استخدم raw URL بشكل مباشر في السكربت الذي يحشده
-    // هذا الدالة تبقي المسارات كما هي إذا تم فتح index.html مستقلاً من نفس المجلد.
-    return path;
+  function handleGameEvent(p){
+    if(p.event === 'kill'){
+      // عرض بصري مؤقت
+      document.body.animate([{background:'rgba(255,0,0,0.12)'},{background:'transparent'}], {duration:700});
+    }
+    if(p.event === 'win'){
+      document.body.animate([{transform:'scale(1)'},{transform:'scale(1.02)'},{transform:'scale(1)'}], {duration:1200});
+    }
+    if(p.event === 'stats'){
+      // تحديث HUD إن وُجدت بيانات
+      if(p.fps) fpsSpan.textContent = p.fps;
+      if(p.ping) pingSpan.textContent = p.ping;
+    }
   }
 
-  // ===== رصد وجود canvas الأساسي (تلميح لتحسينات لاحقة) =====
-  const gameCanvas = document.querySelector('canvas');
-  if(gameCanvas) {
-    // نجعل الفلاتر CSS تعمل فوق الـ canvas عبر وضع classes على documentElement (تعريفها في style.css)
-    // (لا نصلح أو نغير منطق اللعبة — مجرد تأثير بصري)
-    console.debug('AE: Found canvas — cosmetic filters enabled.');
-  } else {
-    console.debug('AE: Canvas not found yet — filters ستطبق متى ما ظهر canvas.');
-    // نراقب DOM لإيجاد canvas لاحقًا
-    const obs = new MutationObserver(()=> {
-      const c = document.querySelector('canvas');
-      if(c) {
-        console.debug('AE: canvas discovered.');
-        obs.disconnect();
-      }
-    });
-    obs.observe(document.documentElement, { childList:true, subtree:true });
-  }
+  // تتبع الفأرة لتحريك الصورة التجريبية
+  window.addEventListener('mousemove', (ev) => {
+    skinOverlay.style.left = (ev.clientX - 24) + 'px';
+    skinOverlay.style.top = (ev.clientY - 24) + 'px';
+  });
 
-  // منع أي خطأ أن يقضي على الـ HUD
-  window.addEventListener('error', (e)=> console.warn('AE error', e), true);
+  // واجهة برمجية بسيطة للتجارب عبر console
+  window.AE_UI = {
+    send: (type, payload) => window.postMessage({ aeOrigin:true, type, payload }, '*'),
+  };
 })();
