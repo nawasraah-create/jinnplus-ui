@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>3rb.io Arabic Plus — HUD</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>3rb.io Arabic Enhancer — HUD</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="ae-hud" dir="rtl" aria-live="polite">
+  <div id="ae-hud" dir="rtl" style="pointer-events:auto;">
     <header>
       <h2>🔥 3rb.io النسخة المحسّنة</h2>
       <div id="ae-controls">
@@ -34,12 +34,12 @@
 
     <footer>
       <label><input type="checkbox" id="ae-overlay-toggle" checked> اظهار الـ HUD</label>
-      <small>تصميم عربي — للتخصيص فقط</small>
+      <small>تصميم عربي — خصائص تجميلية فقط</small>
     </footer>
   </div>
 
-  <!-- عناصر مساعدة (لن تظهر إلا عند الحاجة) -->
-  <div id="ae-overlay-layer" aria-hidden="true"></div>
+  <!-- عنصر سكن بسيط يتبع الفأرة (تصويري فقط) -->
+  <img id="ae-skin-overlay" src="assets/skin1.png" style="position:fixed;left:0;top:0;width:48px;height:48px;pointer-events:none;display:none;z-index:9999" alt="skin">
 
   <script src="main.js"></script>
 </body>
