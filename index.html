@@ -1,783 +1,974 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3rb.io - نسخة محسّنة</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-            direction: rtl;
-        }
-        
-        #gameCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: #f0f0f0;
-            cursor: crosshair;
-        }
-        
-        #ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        
-        #startScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            pointer-events: all;
-            min-width: 400px;
-        }
-        
-        #startScreen h1 {
-            color: #667eea;
-            font-size: 48px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        #startScreen .subtitle {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        #connectionStatus {
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        
-        #connectionStatus.connecting {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        #connectionStatus.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        #connectionStatus.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        #playerName {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            direction: rtl;
-        }
-        
-        #startButton {
-            width: 100%;
-            padding: 15px 30px;
-            font-size: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            font-weight: bold;
-        }
-        
-        #startButton:hover {
-            transform: scale(1.05);
-        }
-        
-        #startButton:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .settings {
-            margin-top: 20px;
-            text-align: right;
-        }
-        
-        .settings label {
-            display: block;
-            margin: 10px 0;
-            color: #333;
-            cursor: pointer;
-        }
-        
-        .settings input[type="checkbox"] {
-            margin-left: 10px;
-        }
-        
-        #stats {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            min-width: 200px;
-        }
-        
-        #stats div {
-            margin: 5px 0;
-        }
-        
-        #leaderboard {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            min-width: 200px;
-        }
-        
-        #leaderboard h3 {
-            margin-bottom: 10px;
-            color: #ffd700;
-            text-align: center;
-        }
-        
-        .leaderboard-item {
-            padding: 5px;
-            margin: 3px 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        #minimap {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 150px;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #667eea;
-            border-radius: 10px;
-        }
-        
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-        
-        #controls div {
-            margin: 5px 0;
-        }
-        
-        #debugLog {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #0f0;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            max-width: 500px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-        
-        .hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <canvas id="gameCanvas"></canvas>
-    
-    <div id="ui">
-        <div id="startScreen">
-            <h1>🎮 3rb.io</h1>
-            <p class="subtitle">النسخة المحسّنة - متصل بالسيرفر الأصلي</p>
-            
-            <div id="connectionStatus" class="connecting">
-                🔄 جاري الاتصال بالسيرفر...
-            </div>
-            
-            <input type="text" id="playerName" placeholder="أدخل اسمك..." maxlength="15" value="لاعب عربي">
-            <button id="startButton" disabled>ابدأ اللعب</button>
-            
-            <div class="settings">
-                <label><input type="checkbox" id="showGrid" checked> إظهار الشبكة</label>
-                <label><input type="checkbox" id="showMass" checked> إظهار الكتلة</label>
-                <label><input type="checkbox" id="showNames" checked> إظهار الأسماء</label>
-                <label><input type="checkbox" id="darkMode"> الوضع الليلي</label>
-                <label><input type="checkbox" id="showDebug"> إظهار معلومات التطوير</label>
-            </div>
-        </div>
-        
-        <div id="stats" class="hidden">
-            <div>📊 النقاط: <span id="score">0</span></div>
-            <div>⚡ السرعة: <span id="speed">0</span></div>
-            <div>🎯 الكتلة: <span id="mass">0</span></div>
-            <div>🕒 الوقت: <span id="time">0:00</span></div>
-            <div>📶 Ping: <span id="ping">--</span></div>
-            <div>👥 لاعبين: <span id="playerCount">0</span></div>
-        </div>
-        
-        <div id="leaderboard" class="hidden">
-            <h3>🏆 المتصدرين</h3>
-            <div id="leaderboardList"></div>
-        </div>
-        
-        <canvas id="minimap" class="hidden"></canvas>
-        
-        <div id="controls" class="hidden">
-            <div><strong>التحكم:</strong></div>
-            <div>🖱️ الماوس: التحرك</div>
-            <div>⌨️ Space: الانقسام</div>
-            <div>⌨️ W: إطلاق كتلة</div>
-            <div>⌨️ ESC: القائمة</div>
-        </div>
-        
-        <div id="debugLog" class="hidden"></div>
-    </div>
+<html>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const minimapCanvas = document.getElementById('minimap');
-        const minimapCtx = minimapCanvas.getContext('2d');
-        
-        // إعداد الكانفاس
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        minimapCanvas.width = 150;
-        minimapCanvas.height = 150;
-        
-        // متغيرات اللعبة
-        let ws = null;
-        let gameStarted = false;
-        let myPlayerId = null;
-        let players = new Map();
-        let foods = new Map();
-        let viruses = new Map();
-        let camera = { x: 0, y: 0, zoom: 1 };
-        let mouseX = canvas.width / 2;
-        let mouseY = canvas.height / 2;
-        let startTime = 0;
-        let lastPingTime = 0;
-        let ping = 0;
-        
-        // إعدادات اللعبة
-        const WORLD_WIDTH = 14142;
-        const WORLD_HEIGHT = 14142;
-        const GRID_SIZE = 50;
-        const SERVER_URL = "wss://alpha.3rb.io:777/V5";
-        
-        let settings = {
-            showGrid: true,
-            showMass: true,
-            showNames: true,
-            darkMode: false,
-            showDebug: false
-        };
-        
-        // الألوان
-        const colors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-            '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'
-        ];
-        
-        // Debug Log
-        function debugLog(message) {
-            if (!settings.showDebug) return;
-            const log = document.getElementById('debugLog');
-            const time = new Date().toLocaleTimeString();
-            log.innerHTML += `[${time}] ${message}<br>`;
-            log.scrollTop = log.scrollHeight;
-        }
-        
-        // الاتصال بالسيرفر
-        function connectToServer() {
-            debugLog('🔌 محاولة الاتصال بـ: ' + SERVER_URL);
-            
-            try {
-                ws = new WebSocket(SERVER_URL);
-                ws.binaryType = 'arraybuffer';
-                
-                ws.onopen = () => {
-                    debugLog('✅ تم الاتصال بالسيرفر!');
-                    document.getElementById('connectionStatus').className = 'connected';
-                    document.getElementById('connectionStatus').textContent = '✅ متصل بالسيرفر الأصلي';
-                    document.getElementById('startButton').disabled = false;
-                };
-                
-                ws.onmessage = (event) => {
-                    handleServerMessage(event.data);
-                };
-                
-                ws.onerror = (error) => {
-                    debugLog('❌ خطأ في الاتصال: ' + error);
-                    document.getElementById('connectionStatus').className = 'error';
-                    document.getElementById('connectionStatus').textContent = '❌ فشل الاتصال بالسيرفر';
-                };
-                
-                ws.onclose = () => {
-                    debugLog('🔌 انقطع الاتصال بالسيرفر');
-                    document.getElementById('connectionStatus').className = 'error';
-                    document.getElementById('connectionStatus').textContent = '❌ انقطع الاتصال';
-                    setTimeout(connectToServer, 3000);
-                };
-                
-            } catch (error) {
-                debugLog('❌ خطأ: ' + error.message);
-                document.getElementById('connectionStatus').className = 'error';
-                document.getElementById('connectionStatus').textContent = '❌ خطأ في الاتصال';
-            }
-        }
-        
-        // معالجة رسائل السيرفر
-        function handleServerMessage(data) {
-            if (typeof data === 'string') {
-                debugLog('📥 JSON: ' + data);
-                try {
-                    const json = JSON.parse(data);
-                    handleJSONMessage(json);
-                } catch (e) {
-                    debugLog('❌ خطأ في JSON: ' + e.message);
-                }
-            } else {
-                // Binary message
-                const view = new DataView(data);
-                const opcode = view.getUint8(0);
-                debugLog('📥 Binary opcode: ' + opcode + ' (size: ' + data.byteLength + ')');
-                handleBinaryMessage(opcode, view);
-            }
-        }
-        
-        // معالجة رسائل JSON
-        function handleJSONMessage(json) {
-            debugLog('📋 JSON Type: ' + (json.type || json.cmd || 'unknown'));
-            
-            // معالجة أنواع الرسائل المختلفة
-            if (json.type === 'welcome') {
-                myPlayerId = json.id;
-                debugLog('👤 معرّفي: ' + myPlayerId);
-            }
-        }
-        
-        // معالجة رسائل Binary
-        function handleBinaryMessage(opcode, view) {
-            try {
-                switch (opcode) {
-                    case 16: // Update cells
-                        parseUpdateCells(view);
-                        break;
-                    case 17: // Update position
-                        parseUpdatePosition(view);
-                        break;
-                    case 20: // Clear cells
-                        parseClearCells(view);
-                        break;
-                    case 32: // Add cell
-                        parseAddCell(view);
-                        break;
-                    case 49: // Leaderboard
-                        parseLeaderboard(view);
-                        break;
-                    case 64: // Set border
-                        parseBorder(view);
-                        break;
-                    default:
-                        debugLog('⚠️ Opcode غير معروف: ' + opcode);
-                }
-            } catch (e) {
-                debugLog('❌ خطأ في معالجة Binary: ' + e.message);
-            }
-        }
-        
-        // Parse Update Cells (Opcode 16)
-        function parseUpdateCells(view) {
-            let offset = 1;
-            
-            // قراءة عدد الخلايا للحذف
-            const killCount = view.getUint16(offset, true);
-            offset += 2;
-            
-            for (let i = 0; i < killCount; i++) {
-                const killerId = view.getUint32(offset, true);
-                offset += 4;
-                const killedId = view.getUint32(offset, true);
-                offset += 4;
-                
-                players.delete(killedId);
-            }
-            
-            // قراءة الخلايا المحدثة
-            while (offset < view.byteLength - 5) {
-                try {
-                    const id = view.getUint32(offset, true);
-                    offset += 4;
-                    
-                    const x = view.getInt32(offset, true);
-                    offset += 4;
-                    
-                    const y = view.getInt32(offset, true);
-                    offset += 4;
-                    
-                    const size = view.getUint16(offset, true);
-                    offset += 2;
-                    
-                    const flags = view.getUint8(offset);
-                    offset += 1;
-                    
-                    const colorR = view.getUint8(offset);
-                    offset += 1;
-                    const colorG = view.getUint8(offset);
-                    offset += 1;
-                    const colorB = view.getUint8(offset);
-                    offset += 1;
-                    
-                    // قراءة الاسم
-                    let name = '';
-                    let nameLength = 0;
-                    while (offset < view.byteLength && nameLength < 100) {
-                        const char = view.getUint16(offset, true);
-                        offset += 2;
-                        if (char === 0) break;
-                        name += String.fromCharCode(char);
-                        nameLength++;
-                    }
-                    
-                    const color = `rgb(${colorR}, ${colorG}, ${colorB})`;
-                    
-                    players.set(id, {
-                        id, x, y, size, color, name,
-                        isVirus: (flags & 1) !== 0,
-                        isMe: id === myPlayerId
-                    });
-                    
-                } catch (e) {
-                    break;
-                }
-            }
-        }
-        
-        // Parse Leaderboard (Opcode 49)
-        function parseLeaderboard(view) {
-            let offset = 1;
-            const count = view.getUint32(offset, true);
-            offset += 4;
-            
-            const leaders = [];
-            for (let i = 0; i < count && offset < view.byteLength; i++) {
-                const isMe = view.getUint32(offset, true) === 1;
-                offset += 4;
-                
-                let name = '';
-                while (offset < view.byteLength) {
-                    const char = view.getUint16(offset, true);
-                    offset += 2;
-                    if (char === 0) break;
-                    name += String.fromCharCode(char);
-                }
-                
-                leaders.push({ name: name || 'بدون اسم', isMe });
-            }
-            
-            updateLeaderboard(leaders);
-        }
-        
-        // Parse Border (Opcode 64)
-        function parseBorder(view) {
-            const left = view.getFloat64(1, true);
-            const top = view.getFloat64(9, true);
-            const right = view.getFloat64(17, true);
-            const bottom = view.getFloat64(25, true);
-            
-            debugLog(`🗺️ حدود الخريطة: ${Math.floor(right-left)} x ${Math.floor(bottom-top)}`);
-        }
-        
-        // Parse Clear Cells
-        function parseClearCells(view) {
-            players.clear();
-            foods.clear();
-            viruses.clear();
-        }
-        
-        // Parse Add Cell
-        function parseAddCell(view) {
-            // سيتم تنفيذه لاحقاً
-        }
-        
-        // Parse Update Position
-        function parseUpdatePosition(view) {
-            let offset = 1;
-            const x = view.getFloat32(offset, true);
-            offset += 4;
-            const y = view.getFloat32(offset, true);
-            
-            camera.x = x - canvas.width / 2;
-            camera.y = y - canvas.height / 2;
-        }
-        
-        // تحديث لوحة المتصدرين
-        function updateLeaderboard(leaders) {
-            const list = document.getElementById('leaderboardList');
-            list.innerHTML = leaders.map((leader, i) => {
-                const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-                const suffix = leader.isMe ? ' (أنت)' : '';
-                return `<div class="leaderboard-item"><span>${emoji} ${leader.name}${suffix}</span></div>`;
-            }).join('');
-        }
-        
-        // إرسال رسالة Spawn
-        function sendSpawn(name) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return;
-            
-            const buffer = new ArrayBuffer(1 + name.length * 2 + 2);
-            const view = new DataView(buffer);
-            
-            view.setUint8(0, 0); // Opcode 0 = Spawn
-            
-            for (let i = 0; i < name.length; i++) {
-                view.setUint16(1 + i * 2, name.charCodeAt(i), true);
-            }
-            view.setUint16(1 + name.length * 2, 0, true);
-            
-            ws.send(buffer);
-            debugLog('📤 إرسال Spawn: ' + name);
-        }
-        
-        // إرسال موقع الماوس
-        function sendMouseMove(x, y) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return;
-            
-            const buffer = new ArrayBuffer(13);
-            const view = new DataView(buffer);
-            
-            view.setUint8(0, 16); // Opcode 16 = Mouse Move
-            view.setInt32(1, x, true);
-            view.setInt32(5, y, true);
-            view.setUint32(9, 0, true);
-            
-            ws.send(buffer);
-        }
-        
-        // بدء اللعبة
-        document.getElementById('startButton').addEventListener('click', startGame);
-        document.getElementById('playerName').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') startGame();
-        });
-        
-        function startGame() {
-            const name = document.getElementById('playerName').value.trim() || 'لاعب';
-            
-            sendSpawn(name);
-            
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('stats').classList.remove('hidden');
-            document.getElementById('leaderboard').classList.remove('hidden');
-            document.getElementById('minimap').classList.remove('hidden');
-            document.getElementById('controls').classList.remove('hidden');
-            
-            gameStarted = true;
-            startTime = Date.now();
-            gameLoop();
-        }
-        
-        // حلقة اللعبة
-        function gameLoop() {
-            if (!gameStarted) return;
-            
-            update();
-            render();
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // تحديث
-        function update() {
-            // إرسال موقع الماوس كل 50ms
-            if (Date.now() - lastPingTime > 50) {
-                const worldX = mouseX + camera.x;
-                const worldY = mouseY + camera.y;
-                sendMouseMove(Math.floor(worldX), Math.floor(worldY));
-                lastPingTime = Date.now();
-            }
-            
-            updateStats();
-        }
-        
-        // الرسم
-        function render() {
-            // خلفية
-            ctx.fillStyle = settings.darkMode ? '#1a1a1a' : '#f0f0f0';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // رسم الشبكة
-            if (settings.showGrid) {
-                ctx.strokeStyle = settings.darkMode ? '#333' : '#ddd';
-                ctx.lineWidth = 1;
-                
-                const startX = Math.floor(camera.x / GRID_SIZE) * GRID_SIZE;
-                const startY = Math.floor(camera.y / GRID_SIZE) * GRID_SIZE;
-                
-                for (let x = startX; x < camera.x + canvas.width; x += GRID_SIZE) {
-                    ctx.beginPath();
-                    ctx.moveTo(x - camera.x, 0);
-                    ctx.lineTo(x - camera.x, canvas.height);
-                    ctx.stroke();
-                }
-                
-                for (let y = startY; y < camera.y + canvas.height; y += GRID_SIZE) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, y - camera.y);
-                    ctx.lineTo(canvas.width, y - camera.y);
-                    ctx.stroke();
-                }
-            }
-            
-            // رسم اللاعبين
-            players.forEach(player => {
-                const screenX = player.x - camera.x;
-                const screenY = player.y - camera.y;
-                const radius = player.size;
-                
-                // رسم الخلية
-                ctx.beginPath();
-                ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
-                ctx.fillStyle = player.color;
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                // الاسم
-                if (settings.showNames && player.name) {
-                    ctx.fillStyle = 'white';
-                    ctx.font = `bold ${Math.max(12, radius * 0.3)}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(player.name, screenX, screenY);
-                }
-                
-                // الكتلة
-                if (settings.showMass) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    ctx.font = `${Math.max(10, radius * 0.2)}px Arial`;
-                    ctx.fillText(Math.floor(player.size), screenX, screenY + radius * 0.5);
-                }
-            });
-        }
-        
-        // تحديث الإحصائيات
-        function updateStats() {
-            const myPlayer = Array.from(players.values()).find(p => p.isMe);
-            
-            if (myPlayer) {
-                document.getElementById('score').textContent = Math.floor(myPlayer.size * myPlayer.size / 100);
-                document.getElementById('mass').textContent = Math.floor(myPlayer.size);
-            }
-            
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const minutes = Math.floor(elapsed / 60);
-            const seconds = elapsed % 60;
-            document.getElementById('time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            document.getElementById('playerCount').textContent = players.size;
-        }
-        
-        // الأحداث
-        canvas.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-        
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                // إرسال أمر الانقسام
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    const buffer = new ArrayBuffer(1);
-                    const view = new DataView(buffer);
-                    view.setUint8(0, 17); // Opcode 17 = Split
-                    ws.send(buffer);
-                    debugLog('📤 انقسام!');
-                }
-            } else if (e.code === 'KeyW') {
-                e.preventDefault();
-                // إرسال أمر إطلاق كتلة
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    const buffer = new ArrayBuffer(1);
-                    const view = new DataView(buffer);
-                    view.setUint8(0, 21); // Opcode 21 = Eject mass
-                    ws.send(buffer);
-                    debugLog('📤 إطلاق كتلة!');
-                }
-            }
-        });
-        
-        // الإعدادات
-        document.getElementById('showGrid').addEventListener('change', (e) => {
-            settings.showGrid = e.target.checked;
-        });
-        
-        document.getElementById('showMass').addEventListener('change', (e) => {
-            settings.showMass = e.target.checked;
-        });
-        
-        document.getElementById('showNames').addEventListener('change', (e) => {
-            settings.showNames = e.target.checked;
-        });
-        
-        document.getElementById('darkMode').addEventListener('change', (e) => {
-            settings.darkMode = e.target.checked;
-        });
-        
-        document.getElementById('showDebug').addEventListener('change', (e) => {
-            settings.showDebug = e.target.checked;
-            document.getElementById('debugLog').classList.toggle('hidden', !e.target.checked);
-        });
-        
-        // تغيير حجم النافذة
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-        
-        // الاتصال عند تحميل الصفحة
-        connectToServer();
-    </script>
+<head>
+
+	<!-- TITLE -->
+	<title>اقاريو العربيه</title>
+
+	<!-- META -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge;charset=utf-8" charset="utf8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="description" content="اقاريو العربيه لعبة مجانية على الإنترنت بأسلوب اقاريو! رسومات أفضل, لعبة أكثر سلاسة, لا حاجة للتنزيل! قم بأكل اللاعبين الأصغر حجمًا لتنمو, وسيطر على قائمة المتصدرين">
+	<meta name="keywords" content="اقاريو, اقاريو العربية, اقاريو العربيه, العاب اونلاين, ألعاب جماعية, ألعاب متعددة اللاعبين, العاب متصفح">
+	<meta name="robots" content="index, follow">
+	<meta name="viewport"
+		content="minimal-ui, width=device-width, minimum-scale=1, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="google-site-verification" content="" />
+	<meta name="theme-color" content="#00ff00">
+
+	<!-- FB/OG META -->
+	<meta property="og:title" content="اقاريو العربيه" />
+	<meta property="og:description" content="اقاريو العربيه لعبة مجانية على الإنترنت بأسلوب اقاريو! رسومات أفضل, لعبة أكثر سلاسة, لا حاجة للتنزيل! قم بأكل اللاعبين الأصغر حجمًا لتنمو, وسيطر على قائمة المتصدرين" />
+	<meta property="og:url" content="https://3rb.io" />
+	<meta property="og:image" content="https://3rb.io/res/1024.png" />
+	<meta property="og:image:width" content="1024" />
+	<meta property="og:image:height" content="1024" />
+	<meta property="og:type" content="website" />
+
+	<link id="favicon" rel="icon" type="image/png" href="favicon-32x32.png" />
+
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-EBWGR3T8HR"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+
+		gtag('config', 'G-EBWGR3T8HR');
+	</script>
+
+	<!-- CSS -->
+	<link rel="preload" href="res/logo.png" as="image">
+	<link rel="stylesheet" type="text/css" href="css/style.css?v=9215b4ce">
+	<link href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,900|Poppins:300,400,700,900" rel="stylesheet">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+		integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="js/lib/color-picker-master/color-picker.css?v=1.4.0">
+
+	<!-- JQUERY -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+	<!-- Boostrap -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+		integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+
+	<!-- XSOLLA -->
+	<script type="text/javascript" src="https://static.xsolla.com/embed/paystation/1.0.7/widget.min.js"></script>
+
+	<!-- CAPTCHA -->
+	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+</head>
+
+<body>
+	<div id="preroll"></div>
+
+	<div class="cf-turnstile"></div>
+
+	<div id="loader">
+		<img id="loaderLogo" src="res/logo.png" class="flex-center nodrag">
+	</div>
+
+	<div id="chatSettings" class="card">
+		<!-- <div class="tab-content">
+			<div class="tab-pane fade show active" id="settings-chat" role="tabpanel" style="text-align: center;">
+				<div class="clearfix">
+					<h5 class="optionLabel" style="margin-top: 20px;">Theme</h5>
+					<div id="chatThemes" style="text-align: center;">
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" checked>
+							<img class="theme nodrag" src="res/themes/hex.png?v=2" id="chatTheme-hex" onclick="setThemeChat('hex', this);">
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio">
+							<img class="theme nodrag" src="res/themes/grid.png?v=2" id="chatTheme-grid" onclick="setThemeChat('grid', this);">
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio">
+							<img class="theme nodrag" src="res/themes/empty.png?v=2" id="chatTheme-empty" onclick="setThemeChat('empty', this);">
+						</div>
+					</div>
+				</div>
+				<div class="clearfix">
+					<h5 class="optionLabel" style="margin-top: 20px;">Color</h5>
+					<div id="chatColors" style="text-align: center;">
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" checked>
+							<img class="color nodrag" src="res/themes/gray.png?v=2" id="chatColor-gray" onclick="setColorChat('gray', this);">
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio">
+							<img class="color nodrag" src="res/themes/white.png?v=2" id="chatColor-white" onclick="setColorChat('white', this);">
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio">
+							<img class="color nodrag" src="res/themes/black.png?v=2" id="chatColor-black" onclick="setColorChat('black', this);">
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="clearfix">
+					<h5 class="optionLabel">Show Names</h5>
+					<select id="chatShowNames" onchange="changeSetting('showNames', this.value);">
+						<option value="all">All</option>
+						<option value="party">Party</option>
+						<option value="self">Self</option>
+						<option value="none">None</option>
+					</select>
+				</div>
+				<div class="clearfix">
+					<h5 class="optionLabel">Show Skins</h5>
+					<select id="chatShowSkins" onchange="changeSetting('showSkins', this.value);">
+						<option value="all">All</option>
+						<option value="party">Party</option>
+						<option value="self">Self</option>
+						<option value="none">None</option>
+					</select>
+				</div>
+				<div class="clearfix">
+					<h5 class="optionLabel">Auto Zoom</h5>
+					<label class="switch">
+						<input type="checkbox" id="chatAutoZoom" onchange="changeSetting('autoZoom', this.checked);">
+						<span class="slider round"></span>
+					</label>
+				</div>
+				<div class="clearfix">
+					<h5 class="optionLabel">Show Mass</h5>
+					<label class="switch">
+						<input type="checkbox" id="chatShowMass" onchange="changeSetting('showMass', this.checked);">
+						<span class="slider round"></span>
+					</label>
+				</div>
+			</div>
+		</div> -->
+	</div>
+
+	<div id="settings" style="display:none;" onclick="hideSettings(event);">
+		<div id="settingsContainer">
+			<div id="settingsCard" class="card">
+				<i class="fas fa-times" id="settingsClose" onclick="hideSettings(event);"></i>
+				<ul class="nav nav-pills" id="settingsTabs" role="tablist">
+					<li class="nav-item">
+						<a class="nav-link active" data-toggle="pill" href="#settings-general" role="tab"
+							aria-controls="settings-general" aria-selected="true">Gameplay</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" data-toggle="pill" href="#settings-graphics" role="tab"
+							aria-controls="settings-graphics" aria-selected="false">Themes</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" data-toggle="pill" href="#settings-controls" role="tab"
+							aria-controls="settings-controls" aria-selected="false">Controls</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" data-toggle="pill" href="#settings-region" role="tab"
+							aria-controls="settings-region" aria-selected="false">Region</a>
+					</li>
+				</ul>
+				<div class="tab-content" id="settingsTabsContent">
+					<div class="tab-pane fade show active" id="settings-general" role="tabpanel"
+						style="text-align: center;">
+						<span class="badge badge-pill badge-primary">General Options</span>
+						<div class="clearfix">
+							<h5 class="optionLabel">Skip Match Results</h5>
+							<label class="switch">
+								<input type="checkbox" id="skipDeathScreen"
+									onchange="changeSetting('skipDeathScreen', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<span class="badge badge-pill badge-primary">Render Options</span>
+						<div class="clearfix">
+							<h5 class="optionLabel">Show Names</h5>
+							<select id="showNames" onchange="changeSetting('showNames', this.value);">
+								<option value="all">All</option>
+								<option value="party">Party</option>
+								<option value="self">Self</option>
+								<option value="none">None</option>
+							</select>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Show Skins</h5>
+							<select id="showSkins" onchange="changeSetting('showSkins', this.value);">
+								<option value="all">All</option>
+								<option value="party">Party</option>
+								<option value="self">Self</option>
+								<option value="none">None</option>
+							</select>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Show Wearables</h5>
+							<select id="showSkins" onchange="changeSetting('showWearables', this.value);">
+								<option value="all">All</option>
+								<option value="party">Party</option>
+								<option value="self">Self</option>
+								<option value="none">None</option>
+							</select>
+						</div>
+						<div class="clearfix">
+							<h5 id="animationDelayLabel" class="optionLabel">Animation Speed</h5>
+							<input data-toggle="tooltip" data-placement="top"
+								title="<div id='animationDelayTooltip'>120</div>" type="range" min="30" max="210"
+								value="120" class="range" id="animationDelay"
+								oninput="changeSetting('animationDelay', this.value); $('#animationDelayTooltip').text(this.value);">
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Auto Zoom</h5>
+							<label class="switch">
+								<input type="checkbox" id="autoZoom"
+									onchange="changeSetting('autoZoom', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Mouse Arrow</h5>
+							<label class="switch">
+								<input type="checkbox" id="mouseArrow"
+									onchange="changeSetting('mouseArrow', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Show Mass</h5>
+							<label class="switch">
+								<input type="checkbox" id="showMass"
+									onchange="changeSetting('showMass', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Hide Food</h5>
+							<label class="switch">
+								<input type="checkbox" id="hideFood"
+									onchange="changeSetting('hideFood', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Hide Border</h5>
+							<label class="switch">
+								<input type="checkbox" id="hideBorder"
+									onchange="changeSetting('hideBorder', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<span class="badge badge-pill badge-primary">UI Options</span>
+						<div class="clearfix">
+							<h5 class="optionLabel">Disable Profanity Filter</h5>
+							<label class="switch">
+								<input type="checkbox" id="disableProfanityFilter"
+									onchange="changeSetting('disableProfanityFilter', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Hide XP Bar</h5>
+							<label class="switch">
+								<input type="checkbox" id="hideXP" onchange="changeSetting('hideXP', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						<div class="clearfix">
+							<h5 class="optionLabel">Hide Chat</h5>
+							<label class="switch">
+								<input type="checkbox" id="hideChat"
+									onchange="changeSetting('hideChat', this.checked);">
+								<span class="slider round"></span>
+							</label>
+						</div>
+					</div>
+					<div class="tab-pane fade" id="settings-graphics" role="tabpanel">
+						<span class="badge badge-pill badge-primary">Theme</span>
+						<div id="themes" style="text-align: center;">
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio" checked>
+								<img class="theme nodrag" src="res/themes/hex.png?v=2" id="theme-hex"
+									onclick="setTheme('hex', this);">
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio">
+								<img class="theme nodrag" src="res/themes/grid.png?v=2" id="theme-grid"
+									onclick="setTheme('grid', this);">
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio">
+								<img class="theme nodrag" src="res/themes/empty.png?v=2" id="theme-empty"
+									onclick="setTheme('empty', this);">
+							</div>
+						</div>
+						<span class="badge badge-pill badge-primary">Color</span>
+						<div id="colors" style="text-align: center;">
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio" checked>
+								<img class="color nodrag" src="res/themes/gray.png?v=2" id="color-gray"
+									onclick="setColor('gray', this);">
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio">
+								<img class="color nodrag" src="res/themes/white.png?v=2" id="color-white"
+									onclick="setColor('white', this);">
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="radio">
+								<img class="color nodrag" src="res/themes/black.png?v=2" id="color-black"
+									onclick="setColor('black', this);">
+							</div>
+						</div>
+					</div>
+					<div class="tab-pane fade" id="settings-controls" role="tabpanel">
+						<div class="row" style="margin-top: 10px;">
+							<div class="col-md-6" style="font-size: 20px;">Reset Controls</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="margin-bottom: 15px;">
+									<input onclick="resetControls();" type="button" class="btn btn-danger" value="Reset"
+										style="width: 100px;height: 35px;line-height: 1;">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Feed</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keyFeed" type="text" class="form-control" value="W">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Split</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keySplit" type="text" class="form-control" value="Space">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Double Split</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keyDouble" type="text" class="form-control" value="D">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Triple Split</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keyTriple" type="text" class="form-control" value="R">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">16x Split</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="key16x" type="text" class="form-control" value="T">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Freeze (Line Split)</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keyFreeze" type="text" class="form-control" value="F">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Vertical (Line Split)</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keyVertical" type="text" class="form-control" value="V">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6" style="font-size: 20px;">Hide UI (For Clips)</div>
+							<div class="col-md-6" style="font-size: 20px;">
+								<div class="input-group input-group-sm" style="width: 100px;">
+									<input id="keyHide" type="text" class="form-control" value="H">
+								</div>
+							</div>
+						</div>
+						<!--<div class="row">
+									<div class="col-md-6" style="font-size: 20px;">Spectate Camera</div>
+									<div class="col-md-6" style="font-size: 20px;">
+										<div class="input-group input-group-sm" style="width: 100px;">
+											<input id="keySpectate" type="text" class="form-control" value="Q">
+										</div>
+									</div>
+								</div>-->
+					</div>
+					<div class="tab-pane fade" id="settings-region" role="tabpanel">
+						<!--<button onclick="setRegion('Test');" id="regionTest" type="button" class="btn btn-secondary btn-lg btn-block">
+									Test
+								</button>-->
+						<button onclick="setRegion('NA');" id="regionNA" type="button"
+							class="btn btn-secondary btn-lg btn-block">
+							Europe
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="menu">
+		<div id="rankings" style="display:none;" onclick="hideRankings(event);">
+			<div id="rankingsCard" class="card">
+				<h1>Rankings</h1>
+				<div id="rankingsSelect" class="form-group">
+					<select class="form-control" id="rankingsSelect" onchange="showRankings(this.value);">
+						<option value="Levels" selected="selected">Levels</option>
+						<option value="Coins">Coins</option>
+					</select>
+				</div>
+				<div id="rankingsList">
+					<table class="table table-striped table-dark">
+						<thead id="rankingsHead">
+						</thead>
+						<tbody id="rankingsTable">
+						</tbody>
+					</table>
+				</div>
+				<div id="rankingsClose" onclick="hideRankings();">
+					<i class="fa fa-times"></i>
+				</div>
+			</div>
+		</div>
+		<div id="shop" style="display:none;" onclick="hideShop(event);">
+			<div id="shopCard" class="card">
+				<img id="shopAvatar" src="#">
+				<h5 id="shopName" class="nodrag"></h5>
+				<span id="shopCoins" class="nodrag">
+					<img src="res/coins.png"> <span id="shopCoinAmount"></span>
+					<a onclick="shopTab('#shopNavCoins', '#shopTabCoins'); event.preventDefault();" href="#"><i
+							class="fas fa-plus"></i></a>
+				</span>
+				<ul id="shopNav">
+					<li class="active">
+						<a onclick="shopTab(this, '#shopTabLimited'); event.preventDefault();" href="#">
+							<img src="res/limited.png?v=2"> Limited
+						</a>
+					</li>
+					<li>
+						<a onclick="shopTab(this, '#shopTabVeteran'); event.preventDefault();" href="#">
+							<img src="res/skins/veteran/kraken.png"> Veteran
+						</a>
+					</li>
+					<li>
+						<a onclick="shopTab(this, '#shopTabPremium'); event.preventDefault();" href="#">
+							<img src="res/skins/premium/phoenix.png"> Premium
+						</a>
+					</li>
+					<li>
+						<a onclick="shopTab(this, '#shopTabWearables'); event.preventDefault();" href="#">
+							<img src="res/skins/premium/phoenix.png"> Wearables
+						</a>
+					</li>
+					<li>
+						<a id="shopNavCoins" onclick="shopTab(this, '#shopTabCoins'); event.preventDefault();" href="#">
+							<img src="res/coins.png"> Coins
+						</a>
+					</li>
+					<li>
+						<a onclick="shopTab(this, '#shopTabBoosts'); event.preventDefault();" href="#">
+							<img src="res/boost.png"> Boosts
+						</a>
+					</li>
+				</ul>
+
+				<ul id="shopContent">
+					<li class="active" id="shopTabLimited">
+						<h1>Limited</h1>
+					</li>
+					<li id="shopTabVeteran">
+						<h1>Veteran</h1>
+					</li>
+					<li id="shopTabPremium">
+						<h1>Premium</h1>
+					</li>
+					<li id="shopTabWearables">
+						<h1>Wearables</h1>
+					</li>
+					<li id="shopTabCoins">
+						<h1>Coins</h1>
+					</li>
+					<li id="shopTabBoosts">
+						<h1>Boosts</h1>
+					</li>
+				</ul>
+
+				<div id="shopClose" onclick="hideShop();">
+					<i class="fa fa-times"></i>
+				</div>
+			</div>
+		</div>
+		<div id="skins" style="display:none;" onclick="hideSkins(event);">
+			<div id="skinsCard" class="card">
+				<h1>Skins</h1>
+				<h5 id="skinsLoginMessage">Login To Access Exclusive Member Skins!</h5>
+
+				<form onsubmit="searchSkin($('#searchText').val()); event.preventDefault(); return false;">
+					<input type="text" placeholder="Search" class="form-control" id="searchText" spellcheck="off"
+						autocomplete="off">
+				</form>
+
+				<button class="btn btn-info navbar-btn btn-s" type="button" id="clearSearch"
+					onclick="clearSearch(); $('#searchText').val(''); $('#clearSearch').hide();">Clear Search</button>
+
+				<div id="skinsClose" onclick="hideSkins();">
+					<i class="fa fa-times"></i>
+				</div>
+
+				<hr>
+
+				<div id="skinContainer">
+					<ul class="skinList">
+						<div id="customSkin">
+							<span class="badge badge-pill badge-primary"
+								style="margin-bottom: 15px;width: 100%;font-size: 17px;">Custom Skin</span>
+							<div class="input-group mb-3"
+								style="text-align:center;width: 300px;margin: 0 auto;float: none;">
+								<input id="loginCustomSkinText" type="text" class="form-control"
+									placeholder="Imgur Link" style="border: 0;">
+								<div class="input-group-append">
+									<button class="btn btn-info" type="button"
+										onclick="setSkin($('#loginCustomSkinText').val(), true)">Apply</button>
+								</div>
+							</div>
+						</div>
+						<span id="paidSkinBadge" class="badge badge-pill badge-primary"
+							style="display:none;margin-bottom: 10px;width: 100%;font-size: 17px;">Owned Skins</span>
+						<div id="paidSkinList" style="display:none;margin-bottom: 10px;">
+							<li>
+								<img onclick="setSkin('None');"
+									src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+								<p>None</p>
+							</li>
+						</div>
+						<span class="badge badge-pill badge-primary"
+							style="margin-bottom: 10px;width: 100%;font-size: 17px;">Free Skins</span>
+						<div id="freeSkinList">
+							<li>
+								<img onclick="setSkin('None');"
+									src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+								<p>None</p>
+							</li>
+						</div>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div id="deathContainer" style="display: none;">
+			<div id="deathCenter" class="column">
+				<div class="card" id="statsCard">
+					<div id="statsContainer">
+						<h3 id="statsHeader">Match Results</h3>
+						<div id="statsPelletsContainer">
+							<span id="statsText" class="stats-food-eaten">6</span>
+							<span id="statsSubtext" data-itr="stats_food_eaten">food eaten</span>
+						</div>
+						<div id="statsHighestMassContainer">
+							<span id="statsText" class="stats-highest-mass">78</span>
+							<span id="statsSubtext" data-itr="stats_highest_mass">highest mass</span>
+						</div>
+						<div id="statsTimeAliveContainer">
+							<span id="statsText" class="stats-time-alive">0:05</span>
+							<span id="statsSubtext" data-itr="stats_time_alive">time alive</span>
+						</div>
+						<div id="statsTimeLeaderboardContainer">
+							<span id="statsText" class="stats-leaderboard-time">0:04</span>
+							<span id="statsSubtext" data-itr="stats_leaderboard_time">leaderboard time</span>
+						</div>
+						<div id="statsPlayerCellsEatenContainer">
+							<span id="statsText" class="stats-cells-eaten">0</span>
+							<span id="statsSubtext" data-itr="stats_cells_eaten">cells eaten</span>
+						</div>
+						<div id="statsTopPositionContainer">
+							<span id="statsText" class="stats-top-position">40</span>
+							<span id="statsSubtext" data-itr="stats_top_position">top position</span>
+						</div>
+						<button id="statsContinue" class="btn btn-success" onclick="hideDeath()">Continue</button>
+					</div>
+					<div id="statsAdvertisement" class="row">
+						<!--<p>Advertisement</p>-->
+						<div class="col">
+							<div id="money-square-death">
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="menuContainer">
+			<div id="menuLeft" class="column">
+				<div class="card" style="height: 281px;">
+					<div id="login">
+						<h5 style="text-align:center;" class="nodrag">
+							قـريباً ، سيتم فتح تسجيل الدخول !
+						</h5>
+						<ul style="margin-top: 20px;margin-bottom: 20px;">
+							<li><span class="nodrag">Bonus Starting Mass</span></li>
+							<li><span class="nodrag">Exclusive Member Skins</span></li>
+							<li><span class="nodrag">Free Coins Every Day</span></li>
+						</ul>
+						<button type="button" class="btn btn-discord btn-secondary" onclick="auth('discord');">
+							<i class="fab fa-discord" style="font-weight: 300 !important;"></i>
+							Sign in With Discord
+						</button>
+						<button type="button" class="btn btn-google btn-secondary" onclick="auth('google');">
+							<i class="fab fa-google"></i>
+							Sign in With Google
+						</button>
+					</div>
+				</div>
+				<div class="card nodrag" style="height: 189px;">
+					<div class="row">
+						<div class="col">
+							<div id="money-square">
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="menuCenter" class="column">
+				<img id="menuLogo" class="nodrag" src="res/logo.png">
+				<div class="card" style="height: 209px;">
+					<div class="row" style="margin-bottom: 0px;">
+						<div class="col">
+							<div class="form-group" style="display: flex;margin-bottom: 10px;">
+								<input id="nick" type="text" placeholder="Nickname" maxlength="25" autocomplete="off"
+									spellcheck="false">
+								<div id="skin-wearable">
+									<button id="skin" type="button" class="btn btn-dark"
+										onclick="openSkins();"></button>
+									<div id="wearable"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class=" row">
+						<div class="col" style="display: flex;">
+							<button id="play" type="button" class="btn btn-primary" disabled>
+								<img src="res/btnPlay.svg">
+							</button>
+							<button id="spectate" type="button" class="btn btn-warning" disabled>
+								<img src="res/btnSpectate.svg">
+							</button>
+						</div>
+					</div>
+					<div class="row" style="margin-bottom: 35px;">
+						<div class="col" style="display: flex;">
+							<button id="settingsButton" type="button" class="btn btn-secondary"
+								onclick="openSettings(); return false;"><img src="res/btnSettings.svg"></button>
+						</div>
+					</div>
+					<a id="version" class="nodrag" href="#" onclick="return false;">Version: 5.0.0</a>
+					<ul id="about">
+						<li><a class="nodrag" href="#" onclick="return false;">Terms of service</a></li>
+						<li><a class="nodrag" href="#" onclick="return false;">Privacy Policy</a></li>
+						<li><a class="nodrag" href="https://docs.3rb.io/" target="_blank"
+								rel="noopener noreferrer">Docs</a></li>
+						<li><a class="nodrag" href="https://news.3rb.io/" target="_blank" rel="noopener noreferrer">News</a></li>
+
+					</ul>
+				</div>
+				<div class="card nodrag partyCard" style="height: 165px;">
+					<div class="row">
+						<div class="col">
+							<h4 class="partyCreate">
+								<span>Joining Party...</span>
+							</h4>
+							<div id="partyFind">
+								<h4 class="partyTitle">
+									<span><i class="fas fa-user-friends"></i> PARTY</span>
+								</h4>
+								<div class="partyText">Play with your friends</div>
+								<div class="clear">
+									<button class="btn btn-primary btn-party party-create"
+										onclick="createParty(); return false;"><img src="res/btnCreate.svg"></button>
+									<button class="btn btn-success btn-party party-join"
+										onclick="joinParty(); return false;"><img src="res/btnJoin.svg"></button>
+								</div>
+							</div>
+							<div id="partyMenu">
+								<i class="fas fa-sign-out-alt partyExit" onclick="exitParty(); return false;"></i>
+								<h4 class="partyTitle">
+									<span><i class="fas fa-user-friends"></i> PARTY</span>
+								</h4>
+								<div class="partyText">Share the code to your friends!</div>
+								<div class="clear">
+									<div class="input-group">
+										<input id="partyCopyCode" type="text" value="3rb.io/#1234" readonly="readonly"
+											class="form-control party-token" onclick="$(this).select();">
+										<div class="input-group-append">
+											<button class="btn btn-primary btn-party party-copy"
+												onclick="copyToClipboard(document.getElementById('partyCopyCode')); $('#partyCopyCode').select();">Copy</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div id="partyJoin">
+								<i class="fas fa-sign-out-alt partyExit" onclick="exitParty(); return false;"></i>
+								<h4 class="partyTitle">
+									<span><i class="fas fa-user-friends"></i> PARTY</span>
+								</h4>
+								<div class="partyText">Enter the code from your friends!</div>
+								<div class="clear">
+									<div class="input-group">
+										<input id="partyJoinCode" type="text" class="form-control party-token">
+										<div class="input-group-append">
+											<button class="btn btn-success btn-party party-copy"
+												onclick="partyCode($('#partyJoinCode').val());">Join</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="card nodrag" style="height: 86px;">
+					<div class="row">
+						<div class="col" id="socialIcons">
+							<a href="https://discord.gg/3rbio"><img src="res/social/discord.svg"></a>
+							<a href="https://www.tiktok.com/@3rbioofficial"><img src="res/social/tiktok.svg"></a>
+							<a href="https://www.instagram.com/3rbofficial/"><img src="res/social/instagram.svg"></a>
+							<a href="https://www.youtube.com/3rbio1"><img src="res/social/youtube.svg"></a>
+						</div>
+					</div>
+				</div>
+				<div id="money-top">
+
+				</div>
+				<div id="money-bottom">
+
+				</div>
+			</div>
+			<div id="menuRight" class="column">
+				<div class="card" style="height: 239px;">
+					<div id="servers">
+						<h4 id="serversTitle" class="nodrag">
+							MODES
+							<div id="moreServers">
+								<i class="fas fa-server"></i>
+							</div>
+						</h4>
+						<div class="row" style="justify-content: center;height: 165px;">
+							<div id="connecting">
+								<svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66"
+									xmlns="http://www.w3.org/2000/svg">
+									<circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33"
+										cy="33" r="30"></circle>
+								</svg>
+								<h2>Connecting</h2>
+							</div>
+							<div id="gamemodes" style="display:none;">
+
+							</div>
+							<div id="moreServersList" style="display:none;">
+
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="card nodrag" style="height:230px;display: block;padding-left: 16px;">
+					<h5 id="featuredTitle">FEATURED VIDEO</h5>
+					<div id="featuredSubscribe">
+						<a href="https://www.youtube.com/@3rbio1?sub_confirmation=1"><img src="res/subscribe.png"></a>
+					</div>
+					<iframe id="featuredEmbed" width="292"
+						src="https://www.youtube.com/embed/N6rLbrZmhtw?rel=0&autoplay=0&mute=1&controls=1&enablejsapi=1"
+						frameborder="0" allowfullscreen></iframe>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="game">
+		<div id="gameMenu">
+			<div id="chat" class="nodrag" data-html2canvas-ignore>
+				<div id="tabs">
+					<div id="worldTab" class="chatTab" value="-1"></div>
+				</div>
+				<button id="btnChatSettings"
+					onclick="$('#chatSettings').toggle(); $('#emotes').hide(); $('#btnChatSettings').blur();">
+					<i class="fas fa-cog"></i>
+				</button>
+				<input type="text" id="chat_input" placeholder="Press enter to chat" maxlength="60" autocomplete="off">
+				<div id="emotes">
+					<h3>Emotes</h3>
+					<ul id="emotesList">
+					</ul>
+				</div>
+				<button id="btnEmote" onclick="$('#emotes').toggle(); $('#channels').hide(); $('#btnEmote').blur();">
+					😃
+				</button>
+			</div>
+			<div id="leaderboard" class="nodrag">
+				<button id="btnLeaderboardFriends" onclick="$('#leaderboardFriends').toggle();">
+					<i class="fas fa-users"></i>
+				</button>
+				<div id="leaderboardFriends" style="display: none;">
+					<h5 class="leaderboardFriendCode"><b style="user-select:none;">Friend Code:</b> <u
+							style="user-select: all;">test</u></h5>
+					<div id="leaderboardFriendsTabs">
+						<div id="leaderboardFriendsTabFriends" class="friendsActive"
+							onclick="$('#leaderboardFriendsTabFriends').addClass('friendsActive'); $('#leaderboardFriendsTabRequests').removeClass('friendsActive'); $('#leaderboardFriendsTabsContentFriends').show(); $('#leaderboardFriendsTabsContentRequests').hide();">
+							Friends</div>
+						<div id="leaderboardFriendsTabRequests"
+							onclick="$('#leaderboardFriendsTabFriends').removeClass('friendsActive'); $('#leaderboardFriendsTabRequests').addClass('friendsActive'); $('#leaderboardFriendsTabsContentFriends').hide(); $('#leaderboardFriendsTabsContentRequests').show();">
+							Friend Requests</div>
+					</div>
+					<div id="leaderboardFriendsTabsContentFriends">
+						<div id="leaderboardFriendsTabsContentFriendsList">
+							<ul></ul>
+						</div>
+						<div id="leaderboardFriendsTabsContentFriendsAddFriend"><input id="leaderboardInputFriendCode"
+								type="text" placeholder="Add friend" class="form-control form-control-sm"><button
+								class="btn btn-sm btn-success" style="margin-left: 2px;"
+								onclick="addFriend($('#leaderboardInputFriendCode').val()); $('#leaderboardInputFriendCode').val('')">Send</button>
+						</div>
+					</div>
+					<div id="leaderboardFriendsTabsContentRequests" style="display: none;">
+						<div id="leaderboardFriendsTabsContentRequestsList">
+							<ul></ul>
+						</div>
+					</div>
+				</div>
+				<h3>Leaderboard</h3>
+				<ul id="leaderboardList"></ul>
+			</div>
+			<div id="map" class="nodrag">
+				<div id="mapPlayer"></div>
+				<div id="mapParty"></div>
+			</div>
+			<div id="resetCenter" style="display: none;">
+				<div id="reset" class="nodrag">
+					<span id="resetText"></span>
+				</div>
+			</div>
+			<div id="xpCenter" style="display: none;">
+				<div id="xpProgress" class="nodrag">
+					<h5 id="xpLevel">Level 100</h5>
+					<h5 id="xpEXP">0/50 XP</h5>
+					<div id="xpProgressContainer" class="progress">
+						<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+							style="border-radius: 10px;width: 50%;"></div>
+					</div>
+				</div>
+			</div>
+			<div id="debug" class="nodrag">
+				<div id="debugText"></div>
+			</div>
+			<div id="party" class="nodrag">
+				<div id="partyText"></div>
+			</div>
+			<div id="mobile">
+				<div id="btnEject" ontouchstart="event.preventDefault(); onTouchButtonStart('eject');"
+					ontouchend="onTouchButtonEnd('eject');">
+					<img src="res/eject.png">
+				</div>
+				<div id="btnSplit" ontouchstart="event.preventDefault(); onTouchButtonStart('split');"
+					ontouchend="onTouchButtonEnd('split');">
+					<img src="res/split.png">
+				</div>
+			</div>
+			<div id="userProfile" class="nodrag">
+				<div id="userProfileClose"><i class="fas fa-times"></i></div>
+				<div id="userProfileDetails">
+					<img id="userProfileDetailsSkin" />
+					<div id="userProfileDetailsContainer">
+						<h1 id="userProfileDetailsName"></h1>
+						<h1 id="userProfileDetailsLevel"></h1>
+					</div>
+					<button class="btn btn-success" id="userProfileDetailsAddFriend">Add Friend</button>
+				</div>
+				<div id="userProfileNotFound">
+					<i class="far fa-frown"></i>
+					<h1>This user is not registered in game</h1>
+				</div>
+			</div>
+			<div id="userMenu" class="nodrag">
+				<ul>
+					<div id="userMenuPlayer" style="display: none;">
+						<li>
+							<div id="userMenuPlayerCell">
+								<div id="userMenuPlayerSkin"></div>
+							</div>
+							<p id="userMenuPlayerName">stas.gg</p>
+						</li>
+						<li class="userMenuItem" onclick="userMenuProfile();">
+							<i class="fas fa-user"></i>
+							<p>Profile</p>
+						</li>
+						<hr>
+						<li class="userMenuItem" onclick="userMenuInvite();">
+							<i class="fas fa-users"></i>
+							<p>Invite To Party</p>
+						</li>
+						<li class="userMenuItem" onclick="userMenuBlock();">
+							<i class="fas fa-volume-mute"></i>
+							<p>Mute</p>
+						</li>
+					</div>
+					<li class="userMenuItem userMenuUnblock">
+						<i class="fas fa-chevron-left"></i>
+						<p id="userMenuBlockText">Unmute</p>
+						<div id="userMenuUnblockList">
+							<ul>
+							</ul>
+						</div>
+					</li>
+					<hr>
+					<div id="userMenuLeaveParty" style="display: none;">
+						<li class="userMenuItem" onclick="userMenuLeaveParty();">
+							<i class="fas fa-sign-out-alt"></i>
+							<p>Leave Party</p>
+						</li>
+						<hr>
+					</div>
+					<div id="userMenuCreateParty" style="display: none;">
+						<li class="userMenuItem" onclick="userMenuCreateParty();">
+							<i class="fas fa-plus-circle"></i>
+							<p>Create Party</p>
+						</li>
+						<hr>
+					</div>
+					<li class="userMenuItem" onclick="userMenuScreenshot();">
+						<i class="fas fa-camera"></i>
+						<p>Screenshot</p>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<canvas id="gameCanvas" data-html2canvas-ignore></canvas>
+	</div>
+
+	<!-- Lib -->
+	<script src="js/lib/pixi-legacy.min.js?v=5.1.2"></script>
+	<script src="js/lib/lazyload.min.js?v=8.17"></script>
+	<script src="js/lib/html2canvas.min.js?v=1.0.0-alpha.12"></script>
+	<script src="js/lib/color-picker-master/color-picker.min.js?v=1.4.0"></script>
+
+	<!-- Game Bundle  -->
+	<script id="bundle" src='js/dist/bundle.js?v=c8c30e3a'
+		type='text/javascript'></script>
+
+	<!-- GOOGLE -->
+	<script async src="https://apis.google.com/js/platform.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"ed7e919969c6419794e066691785ee4f","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
+
 </html>
