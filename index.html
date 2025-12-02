@@ -1,46 +1,783 @@
-<!doctype html>
-<html lang="ar">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>3rb.io Arabic Enhancer — HUD</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3rb.io - نسخة محسّنة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            direction: rtl;
+        }
+        
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #f0f0f0;
+            cursor: crosshair;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            pointer-events: all;
+            min-width: 400px;
+        }
+        
+        #startScreen h1 {
+            color: #667eea;
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        #startScreen .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        #connectionStatus {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        #connectionStatus.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        #connectionStatus.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        #connectionStatus.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        #playerName {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            direction: rtl;
+        }
+        
+        #startButton {
+            width: 100%;
+            padding: 15px 30px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+        
+        #startButton:hover {
+            transform: scale(1.05);
+        }
+        
+        #startButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .settings {
+            margin-top: 20px;
+            text-align: right;
+        }
+        
+        .settings label {
+            display: block;
+            margin: 10px 0;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .settings input[type="checkbox"] {
+            margin-left: 10px;
+        }
+        
+        #stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        #stats div {
+            margin: 5px 0;
+        }
+        
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 200px;
+        }
+        
+        #leaderboard h3 {
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .leaderboard-item {
+            padding: 5px;
+            margin: 3px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        #minimap {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        #controls div {
+            margin: 5px 0;
+        }
+        
+        #debugLog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            max-width: 500px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div id="ae-hud" dir="rtl" style="pointer-events:auto;">
-    <header>
-      <h2>🔥 3rb.io النسخة المحسّنة</h2>
-      <div id="ae-controls">
-        <button data-skin="none">السكن الافتراضي</button>
-        <button data-skin="skin1">سكن 1</button>
-        <button data-skin="skin2">سكن 2</button>
-        <select id="ae-map-theme">
-          <option value="default">خريطة: افتراضي</option>
-          <option value="night">ثيم ليلي</option>
-          <option value="colorful">خلفية ملونة</option>
-        </select>
-      </div>
-    </header>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui">
+        <div id="startScreen">
+            <h1>🎮 3rb.io</h1>
+            <p class="subtitle">النسخة المحسّنة - متصل بالسيرفر الأصلي</p>
+            
+            <div id="connectionStatus" class="connecting">
+                🔄 جاري الاتصال بالسيرفر...
+            </div>
+            
+            <input type="text" id="playerName" placeholder="أدخل اسمك..." maxlength="15" value="لاعب عربي">
+            <button id="startButton" disabled>ابدأ اللعب</button>
+            
+            <div class="settings">
+                <label><input type="checkbox" id="showGrid" checked> إظهار الشبكة</label>
+                <label><input type="checkbox" id="showMass" checked> إظهار الكتلة</label>
+                <label><input type="checkbox" id="showNames" checked> إظهار الأسماء</label>
+                <label><input type="checkbox" id="darkMode"> الوضع الليلي</label>
+                <label><input type="checkbox" id="showDebug"> إظهار معلومات التطوير</label>
+            </div>
+        </div>
+        
+        <div id="stats" class="hidden">
+            <div>📊 النقاط: <span id="score">0</span></div>
+            <div>⚡ السرعة: <span id="speed">0</span></div>
+            <div>🎯 الكتلة: <span id="mass">0</span></div>
+            <div>🕒 الوقت: <span id="time">0:00</span></div>
+            <div>📶 Ping: <span id="ping">--</span></div>
+            <div>👥 لاعبين: <span id="playerCount">0</span></div>
+        </div>
+        
+        <div id="leaderboard" class="hidden">
+            <h3>🏆 المتصدرين</h3>
+            <div id="leaderboardList"></div>
+        </div>
+        
+        <canvas id="minimap" class="hidden"></canvas>
+        
+        <div id="controls" class="hidden">
+            <div><strong>التحكم:</strong></div>
+            <div>🖱️ الماوس: التحرك</div>
+            <div>⌨️ Space: الانقسام</div>
+            <div>⌨️ W: إطلاق كتلة</div>
+            <div>⌨️ ESC: القائمة</div>
+        </div>
+        
+        <div id="debugLog" class="hidden"></div>
+    </div>
 
-    <section id="ae-stats">
-      <div>FPS: <span id="ae-fps">--</span></div>
-      <div>Ping: <span id="ae-ping">N/A</span></div>
-    </section>
-
-    <section id="ae-effects">
-      <button id="ae-kill">شغل مؤثر Kill</button>
-      <button id="ae-win">شغل مؤثر Win</button>
-    </section>
-
-    <footer>
-      <label><input type="checkbox" id="ae-overlay-toggle" checked> اظهار الـ HUD</label>
-      <small>تصميم عربي — خصائص تجميلية فقط</small>
-    </footer>
-  </div>
-
-  <!-- عنصر سكن بسيط يتبع الفأرة (تصويري فقط) -->
-  <img id="ae-skin-overlay" src="assets/skin1.png" style="position:fixed;left:0;top:0;width:48px;height:48px;pointer-events:none;display:none;z-index:9999" alt="skin">
-
-  <script src="main.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimap');
+        const minimapCtx = minimapCanvas.getContext('2d');
+        
+        // إعداد الكانفاس
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        minimapCanvas.width = 150;
+        minimapCanvas.height = 150;
+        
+        // متغيرات اللعبة
+        let ws = null;
+        let gameStarted = false;
+        let myPlayerId = null;
+        let players = new Map();
+        let foods = new Map();
+        let viruses = new Map();
+        let camera = { x: 0, y: 0, zoom: 1 };
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+        let startTime = 0;
+        let lastPingTime = 0;
+        let ping = 0;
+        
+        // إعدادات اللعبة
+        const WORLD_WIDTH = 14142;
+        const WORLD_HEIGHT = 14142;
+        const GRID_SIZE = 50;
+        const SERVER_URL = "wss://alpha.3rb.io:777/V5";
+        
+        let settings = {
+            showGrid: true,
+            showMass: true,
+            showNames: true,
+            darkMode: false,
+            showDebug: false
+        };
+        
+        // الألوان
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+            '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'
+        ];
+        
+        // Debug Log
+        function debugLog(message) {
+            if (!settings.showDebug) return;
+            const log = document.getElementById('debugLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `[${time}] ${message}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // الاتصال بالسيرفر
+        function connectToServer() {
+            debugLog('🔌 محاولة الاتصال بـ: ' + SERVER_URL);
+            
+            try {
+                ws = new WebSocket(SERVER_URL);
+                ws.binaryType = 'arraybuffer';
+                
+                ws.onopen = () => {
+                    debugLog('✅ تم الاتصال بالسيرفر!');
+                    document.getElementById('connectionStatus').className = 'connected';
+                    document.getElementById('connectionStatus').textContent = '✅ متصل بالسيرفر الأصلي';
+                    document.getElementById('startButton').disabled = false;
+                };
+                
+                ws.onmessage = (event) => {
+                    handleServerMessage(event.data);
+                };
+                
+                ws.onerror = (error) => {
+                    debugLog('❌ خطأ في الاتصال: ' + error);
+                    document.getElementById('connectionStatus').className = 'error';
+                    document.getElementById('connectionStatus').textContent = '❌ فشل الاتصال بالسيرفر';
+                };
+                
+                ws.onclose = () => {
+                    debugLog('🔌 انقطع الاتصال بالسيرفر');
+                    document.getElementById('connectionStatus').className = 'error';
+                    document.getElementById('connectionStatus').textContent = '❌ انقطع الاتصال';
+                    setTimeout(connectToServer, 3000);
+                };
+                
+            } catch (error) {
+                debugLog('❌ خطأ: ' + error.message);
+                document.getElementById('connectionStatus').className = 'error';
+                document.getElementById('connectionStatus').textContent = '❌ خطأ في الاتصال';
+            }
+        }
+        
+        // معالجة رسائل السيرفر
+        function handleServerMessage(data) {
+            if (typeof data === 'string') {
+                debugLog('📥 JSON: ' + data);
+                try {
+                    const json = JSON.parse(data);
+                    handleJSONMessage(json);
+                } catch (e) {
+                    debugLog('❌ خطأ في JSON: ' + e.message);
+                }
+            } else {
+                // Binary message
+                const view = new DataView(data);
+                const opcode = view.getUint8(0);
+                debugLog('📥 Binary opcode: ' + opcode + ' (size: ' + data.byteLength + ')');
+                handleBinaryMessage(opcode, view);
+            }
+        }
+        
+        // معالجة رسائل JSON
+        function handleJSONMessage(json) {
+            debugLog('📋 JSON Type: ' + (json.type || json.cmd || 'unknown'));
+            
+            // معالجة أنواع الرسائل المختلفة
+            if (json.type === 'welcome') {
+                myPlayerId = json.id;
+                debugLog('👤 معرّفي: ' + myPlayerId);
+            }
+        }
+        
+        // معالجة رسائل Binary
+        function handleBinaryMessage(opcode, view) {
+            try {
+                switch (opcode) {
+                    case 16: // Update cells
+                        parseUpdateCells(view);
+                        break;
+                    case 17: // Update position
+                        parseUpdatePosition(view);
+                        break;
+                    case 20: // Clear cells
+                        parseClearCells(view);
+                        break;
+                    case 32: // Add cell
+                        parseAddCell(view);
+                        break;
+                    case 49: // Leaderboard
+                        parseLeaderboard(view);
+                        break;
+                    case 64: // Set border
+                        parseBorder(view);
+                        break;
+                    default:
+                        debugLog('⚠️ Opcode غير معروف: ' + opcode);
+                }
+            } catch (e) {
+                debugLog('❌ خطأ في معالجة Binary: ' + e.message);
+            }
+        }
+        
+        // Parse Update Cells (Opcode 16)
+        function parseUpdateCells(view) {
+            let offset = 1;
+            
+            // قراءة عدد الخلايا للحذف
+            const killCount = view.getUint16(offset, true);
+            offset += 2;
+            
+            for (let i = 0; i < killCount; i++) {
+                const killerId = view.getUint32(offset, true);
+                offset += 4;
+                const killedId = view.getUint32(offset, true);
+                offset += 4;
+                
+                players.delete(killedId);
+            }
+            
+            // قراءة الخلايا المحدثة
+            while (offset < view.byteLength - 5) {
+                try {
+                    const id = view.getUint32(offset, true);
+                    offset += 4;
+                    
+                    const x = view.getInt32(offset, true);
+                    offset += 4;
+                    
+                    const y = view.getInt32(offset, true);
+                    offset += 4;
+                    
+                    const size = view.getUint16(offset, true);
+                    offset += 2;
+                    
+                    const flags = view.getUint8(offset);
+                    offset += 1;
+                    
+                    const colorR = view.getUint8(offset);
+                    offset += 1;
+                    const colorG = view.getUint8(offset);
+                    offset += 1;
+                    const colorB = view.getUint8(offset);
+                    offset += 1;
+                    
+                    // قراءة الاسم
+                    let name = '';
+                    let nameLength = 0;
+                    while (offset < view.byteLength && nameLength < 100) {
+                        const char = view.getUint16(offset, true);
+                        offset += 2;
+                        if (char === 0) break;
+                        name += String.fromCharCode(char);
+                        nameLength++;
+                    }
+                    
+                    const color = `rgb(${colorR}, ${colorG}, ${colorB})`;
+                    
+                    players.set(id, {
+                        id, x, y, size, color, name,
+                        isVirus: (flags & 1) !== 0,
+                        isMe: id === myPlayerId
+                    });
+                    
+                } catch (e) {
+                    break;
+                }
+            }
+        }
+        
+        // Parse Leaderboard (Opcode 49)
+        function parseLeaderboard(view) {
+            let offset = 1;
+            const count = view.getUint32(offset, true);
+            offset += 4;
+            
+            const leaders = [];
+            for (let i = 0; i < count && offset < view.byteLength; i++) {
+                const isMe = view.getUint32(offset, true) === 1;
+                offset += 4;
+                
+                let name = '';
+                while (offset < view.byteLength) {
+                    const char = view.getUint16(offset, true);
+                    offset += 2;
+                    if (char === 0) break;
+                    name += String.fromCharCode(char);
+                }
+                
+                leaders.push({ name: name || 'بدون اسم', isMe });
+            }
+            
+            updateLeaderboard(leaders);
+        }
+        
+        // Parse Border (Opcode 64)
+        function parseBorder(view) {
+            const left = view.getFloat64(1, true);
+            const top = view.getFloat64(9, true);
+            const right = view.getFloat64(17, true);
+            const bottom = view.getFloat64(25, true);
+            
+            debugLog(`🗺️ حدود الخريطة: ${Math.floor(right-left)} x ${Math.floor(bottom-top)}`);
+        }
+        
+        // Parse Clear Cells
+        function parseClearCells(view) {
+            players.clear();
+            foods.clear();
+            viruses.clear();
+        }
+        
+        // Parse Add Cell
+        function parseAddCell(view) {
+            // سيتم تنفيذه لاحقاً
+        }
+        
+        // Parse Update Position
+        function parseUpdatePosition(view) {
+            let offset = 1;
+            const x = view.getFloat32(offset, true);
+            offset += 4;
+            const y = view.getFloat32(offset, true);
+            
+            camera.x = x - canvas.width / 2;
+            camera.y = y - canvas.height / 2;
+        }
+        
+        // تحديث لوحة المتصدرين
+        function updateLeaderboard(leaders) {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = leaders.map((leader, i) => {
+                const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+                const suffix = leader.isMe ? ' (أنت)' : '';
+                return `<div class="leaderboard-item"><span>${emoji} ${leader.name}${suffix}</span></div>`;
+            }).join('');
+        }
+        
+        // إرسال رسالة Spawn
+        function sendSpawn(name) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            const buffer = new ArrayBuffer(1 + name.length * 2 + 2);
+            const view = new DataView(buffer);
+            
+            view.setUint8(0, 0); // Opcode 0 = Spawn
+            
+            for (let i = 0; i < name.length; i++) {
+                view.setUint16(1 + i * 2, name.charCodeAt(i), true);
+            }
+            view.setUint16(1 + name.length * 2, 0, true);
+            
+            ws.send(buffer);
+            debugLog('📤 إرسال Spawn: ' + name);
+        }
+        
+        // إرسال موقع الماوس
+        function sendMouseMove(x, y) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            const buffer = new ArrayBuffer(13);
+            const view = new DataView(buffer);
+            
+            view.setUint8(0, 16); // Opcode 16 = Mouse Move
+            view.setInt32(1, x, true);
+            view.setInt32(5, y, true);
+            view.setUint32(9, 0, true);
+            
+            ws.send(buffer);
+        }
+        
+        // بدء اللعبة
+        document.getElementById('startButton').addEventListener('click', startGame);
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') startGame();
+        });
+        
+        function startGame() {
+            const name = document.getElementById('playerName').value.trim() || 'لاعب';
+            
+            sendSpawn(name);
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('stats').classList.remove('hidden');
+            document.getElementById('leaderboard').classList.remove('hidden');
+            document.getElementById('minimap').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            
+            gameStarted = true;
+            startTime = Date.now();
+            gameLoop();
+        }
+        
+        // حلقة اللعبة
+        function gameLoop() {
+            if (!gameStarted) return;
+            
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // تحديث
+        function update() {
+            // إرسال موقع الماوس كل 50ms
+            if (Date.now() - lastPingTime > 50) {
+                const worldX = mouseX + camera.x;
+                const worldY = mouseY + camera.y;
+                sendMouseMove(Math.floor(worldX), Math.floor(worldY));
+                lastPingTime = Date.now();
+            }
+            
+            updateStats();
+        }
+        
+        // الرسم
+        function render() {
+            // خلفية
+            ctx.fillStyle = settings.darkMode ? '#1a1a1a' : '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // رسم الشبكة
+            if (settings.showGrid) {
+                ctx.strokeStyle = settings.darkMode ? '#333' : '#ddd';
+                ctx.lineWidth = 1;
+                
+                const startX = Math.floor(camera.x / GRID_SIZE) * GRID_SIZE;
+                const startY = Math.floor(camera.y / GRID_SIZE) * GRID_SIZE;
+                
+                for (let x = startX; x < camera.x + canvas.width; x += GRID_SIZE) {
+                    ctx.beginPath();
+                    ctx.moveTo(x - camera.x, 0);
+                    ctx.lineTo(x - camera.x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                for (let y = startY; y < camera.y + canvas.height; y += GRID_SIZE) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y - camera.y);
+                    ctx.lineTo(canvas.width, y - camera.y);
+                    ctx.stroke();
+                }
+            }
+            
+            // رسم اللاعبين
+            players.forEach(player => {
+                const screenX = player.x - camera.x;
+                const screenY = player.y - camera.y;
+                const radius = player.size;
+                
+                // رسم الخلية
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+                ctx.fillStyle = player.color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // الاسم
+                if (settings.showNames && player.name) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = `bold ${Math.max(12, radius * 0.3)}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(player.name, screenX, screenY);
+                }
+                
+                // الكتلة
+                if (settings.showMass) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.font = `${Math.max(10, radius * 0.2)}px Arial`;
+                    ctx.fillText(Math.floor(player.size), screenX, screenY + radius * 0.5);
+                }
+            });
+        }
+        
+        // تحديث الإحصائيات
+        function updateStats() {
+            const myPlayer = Array.from(players.values()).find(p => p.isMe);
+            
+            if (myPlayer) {
+                document.getElementById('score').textContent = Math.floor(myPlayer.size * myPlayer.size / 100);
+                document.getElementById('mass').textContent = Math.floor(myPlayer.size);
+            }
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('playerCount').textContent = players.size;
+        }
+        
+        // الأحداث
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                // إرسال أمر الانقسام
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const buffer = new ArrayBuffer(1);
+                    const view = new DataView(buffer);
+                    view.setUint8(0, 17); // Opcode 17 = Split
+                    ws.send(buffer);
+                    debugLog('📤 انقسام!');
+                }
+            } else if (e.code === 'KeyW') {
+                e.preventDefault();
+                // إرسال أمر إطلاق كتلة
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const buffer = new ArrayBuffer(1);
+                    const view = new DataView(buffer);
+                    view.setUint8(0, 21); // Opcode 21 = Eject mass
+                    ws.send(buffer);
+                    debugLog('📤 إطلاق كتلة!');
+                }
+            }
+        });
+        
+        // الإعدادات
+        document.getElementById('showGrid').addEventListener('change', (e) => {
+            settings.showGrid = e.target.checked;
+        });
+        
+        document.getElementById('showMass').addEventListener('change', (e) => {
+            settings.showMass = e.target.checked;
+        });
+        
+        document.getElementById('showNames').addEventListener('change', (e) => {
+            settings.showNames = e.target.checked;
+        });
+        
+        document.getElementById('darkMode').addEventListener('change', (e) => {
+            settings.darkMode = e.target.checked;
+        });
+        
+        document.getElementById('showDebug').addEventListener('change', (e) => {
+            settings.showDebug = e.target.checked;
+            document.getElementById('debugLog').classList.toggle('hidden', !e.target.checked);
+        });
+        
+        // تغيير حجم النافذة
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        // الاتصال عند تحميل الصفحة
+        connectToServer();
+    </script>
 </body>
 </html>
